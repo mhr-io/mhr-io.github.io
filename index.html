@@ -149,23 +149,31 @@
                 let maxZoom = 1;
 
                 if (canvas.clipPath.width > maxWidth || canvas.clipPath.height > maxHeight) {
-                    let zommOut = 1;
+                    let zommlimit = 1;
 
-                    while(canvas.clipPath.width * zommOut > maxWidth) {
-                        zommOut -= 0.1;
+                    while(canvas.clipPath.width * zommlimit > maxWidth) {
+                        zommlimit -= 0.1;
                     }
 
-                    while (canvas.clipPath.height * zommOut > maxHeight) {
-                        zommOut -= 0.1;
+                    while (canvas.clipPath.height * zommlimit > maxHeight) {
+                        zommlimit -= 0.1;
                     }
+
+                    // while (canvas.clipPath.width * zommlimit < maxWidth) {
+                    //     zommlimit += 0.1;
+                    // }
+
+                    // while (canvas.clipPath.height * zommlimit < maxHeight) {
+                    //     zommlimit += 0.1;
+                    // }
 
                     const vpt = canvas.viewportTransform;
 
                     const vptPoint = new fabric.Point(vpt[4], vpt[5]);
 
-                    canvas.zoomToPoint(vptPoint, canvas.getZoom() * zommOut);
+                    canvas.zoomToPoint(vptPoint, canvas.getZoom() * zommlimit);
 
-                    maxZoom = zommOut;
+                    maxZoom = zommlimit * 4;
                 }
 
                 const zoonIn = () => {
@@ -228,6 +236,7 @@
                 const mouseup = () => {
                     canvas.setViewportTransform(canvas.viewportTransform);
                     isDragging = false;
+                    pausePanning = false;
                 };
 
                 canvas.on("mouse:down", (options) => {
@@ -251,6 +260,7 @@
 
                 let lastDifX = -1;
                 let lastDifY = -1;
+                let pausePanning = false;
 
                 canvas.on("touch:drag", (options) => {
                     const touch = options.e.touches;
@@ -262,68 +272,97 @@
 
                         if (getObj == 'null') {
                             if (state == 'down') {
+                                /**
+                                 * lastPos
+                                */
                                 lastPosX = point.x;
                                 lastPosY = point.y;
-                                //console.log(lastPosX);
                             }
 
                             if (state == 'move') {
-                                const distX = point.x - lastPosX;
-                                const distY = point.y - lastPosY;
+                                if (!pausePanning) {
+                                    const distX = point.x - lastPosX;
+                                    const distY = point.y - lastPosY;
 
-                                const vpt = canvas.viewportTransform;
-                                vpt[4] += distX;
-                                vpt[5] += distY;
+                                    const vpt = canvas.viewportTransform;
 
-                                canvas.requestRenderAll();
+                                    if(vpt[4] + distX <= 0) {
+                                        const maxLeft = canvas.clipPath.width * canvas.getZoom();
+                                        if (Math.abs(vpt[4] + distX) < maxLeft - 50) {
+                                            vpt[4] += distX;
+                                        }
 
-                                lastPosX = point.x;
-                                lastPosY = point.y;
+                                    } else {
+                                        const maxRight = window.innerWidth - 64;
+                                        if (vpt[4] + distX < maxRight) {
+                                            vpt[4] += distX;
+                                        }
+                                    }
+
+                                    if (vpt[5] + distY <= 0) {
+                                        const maxTop = canvas.clipPath.height * canvas.getZoom();
+                                        if (Math.abs(vpt[5] + distY) < maxTop - 50) {
+                                            vpt[5] += distY;
+                                        }
+
+                                    } else {
+                                        const maxTop = window.innerHeight - 120;
+                                        if (vpt[5] + distY < maxTop) {
+                                            vpt[5] += distY;
+                                        }
+                                    }
+
+                                    canvas.requestRenderAll();
+
+                                    lastPosX = point.x;
+                                    lastPosY = point.y;
+                                }
                             }
                         }
                     }
 
-
                     if (touch && touch.length == 2) {
                         const distX = Math.abs(touch[1].clientX - touch[0].clientX);
                         const distY = Math.abs(touch[1].clientY - touch[0].clientY);
-
-                        const lessX = touch[1].clientX < touch[0].clientX ? touch[1].clientX : touch[0].clientX;
-                        const lessY = touch[1].clientY < touch[0].clientY ? touch[1].clientY : touch[0].clientY;
-                        const point = new fabric.Point(lessX + (distX / 2), lessY + (distY / 2));
 
                         const zoom = canvas.getZoom();
 
                         if (state == 'down') {
                             lastDifX = distX;
                             lastDifY = distY;
+
+                            pausePanning = true;
                         }
 
                         if (state == 'move') {
                             const curDifX = distX - lastPosX;
                             const curDifY = distY - lastPosY;
 
-                            const cacheWidth = canvas.clipPath.cacheWidth;
-                            const cacheHeight = canvas.clipPath.cacheHeight;
+                            const vpt = canvas.viewportTransform;
+                            const vptPoint = new fabric.Point(vpt[4], vpt[5]);
 
-                            if (cacheWidth < maxWidth && cacheHeight < maxHeight) {
+                            /**
+                             * zoom in
+                            */
+                            if (zoom < maxZoom) {
                                 if (curDifX > lastDifX) {
-                                    canvas.zoomToPoint(point, zoom * 1.05);
+                                    canvas.zoomToPoint(vptPoint, zoom * 1.04);
                                 }
                             }
 
-                            if (canvas.clipPath.zoomX > minZoomX) {
+                            /**
+                             * zoom out
+                            */
+                            if (zoom > 0.1) {
                                 if (curDifX < lastDifX) {
-                                    canvas.zoomToPoint(point, zoom / 1.05);
+                                    const clipHeight = canvas.clipPath.height * canvas.getZoom();
+                                    if (clipHeight + vptPoint.y > 64) {
+                                        canvas.zoomToPoint(vptPoint, zoom / 1.04);
+                                    }
                                 }
                             }
 
                             lastDifX = curDifX;
-
-                            console.log("lessX:" + lessX +
-                                " , last:" + touch[0].clientX +
-                                " , cur: " + touch[1].clientX +
-                                " , zoom: " + canvas.getZoom());
                         }
                     }
 
