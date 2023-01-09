@@ -115,14 +115,19 @@
         </div>
         
             <script>
+                console.log("width:" + window.innerWidth + " , height:" + window.innerHeight);
+
                 const canvas = new fabric.Canvas("canvas");
                 canvas.setWidth(window.innerWidth);
                 canvas.setHeight(window.innerHeight);
                 canvas.backgroundColor = 'white';
                 canvas.selection = false; // disable group selection
 
-                const clipPath = new fabric.Rect({ width: 400 , height: 300});
+                const clipPath = new fabric.Rect({ 
+                    width: window.innerWidth , 
+                    height: window.innerHeight });
                 canvas.clipPath = clipPath;
+
 
                 const newCircle = () => {
                     const circle = new fabric.Circle();
@@ -138,15 +143,33 @@
                     canvas.add(rect);
                 }
 
-                const maxWidth = window.innerWidth - 150;
-                const maxHeight = window.innerHeight - 150;
-                const minZoomX = 0.1;
+                const maxWidth = window.innerWidth - 100;
+                const maxHeight = window.innerHeight - 100;
+                
+                let maxZoom = 1;
+
+                if (canvas.clipPath.width > maxWidth || canvas.clipPath.height > maxHeight) {
+                    let zommOut = 1;
+
+                    while(canvas.clipPath.width * zommOut > maxWidth) {
+                        zommOut -= 0.1;
+                    }
+
+                    while (canvas.clipPath.height * zommOut > maxHeight) {
+                        zommOut -= 0.1;
+                    }
+
+                    const vpt = canvas.viewportTransform;
+
+                    const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+
+                    canvas.zoomToPoint(vptPoint, canvas.getZoom() * zommOut);
+
+                    maxZoom = zommOut;
+                }
 
                 const zoonIn = () => {
-                    const cacheWidth = canvas.clipPath.cacheWidth;
-                    const cacheHeight = canvas.clipPath.cacheHeight;
-
-                    if (cacheWidth < maxWidth && cacheHeight < maxHeight) {
+                    if (canvas.getZoom() < maxZoom) {
                         const vpt = canvas.viewportTransform;
 
                         const vptPoint = new fabric.Point(vpt[4], vpt[5]);
@@ -156,7 +179,7 @@
                 }
 
                 const zoomOut = () => {
-                    if (canvas.clipPath.zoomX > minZoomX) {
+                    if (canvas.getZoom() > 0.1) {
                         const vpt = canvas.viewportTransform;
 
                         const vptPoint = new fabric.Point(vpt[4], vpt[5]);
