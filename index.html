@@ -159,14 +159,6 @@
                         zommlimit -= 0.1;
                     }
 
-                    // while (canvas.clipPath.width * zommlimit < maxWidth) {
-                    //     zommlimit += 0.1;
-                    // }
-
-                    // while (canvas.clipPath.height * zommlimit < maxHeight) {
-                    //     zommlimit += 0.1;
-                    // }
-
                     const vpt = canvas.viewportTransform;
 
                     const vptPoint = new fabric.Point(vpt[4], vpt[5]);
@@ -179,7 +171,7 @@
                 const zoonIn = () => {
                     if (canvas.getZoom() < maxZoom) {
                         const vpt = canvas.viewportTransform;
-
+                        
                         const vptPoint = new fabric.Point(vpt[4], vpt[5]);
 
                         canvas.zoomToPoint(vptPoint, canvas.getZoom() * 1.1);
@@ -261,7 +253,10 @@
                 let lastDifX = -1;
                 let lastDifY = -1;
                 let pausePanning = false;
-
+                
+                let startX = 0;
+                let startY = 0;
+                
                 canvas.on("touch:drag", (options) => {
                     const touch = options.e.touches;
                     const state = options.self.state;
@@ -285,6 +280,8 @@
                                     const distY = point.y - lastPosY;
 
                                     const vpt = canvas.viewportTransform;
+
+                                    //console.log(vpt);
 
                                     if(vpt[4] + distX <= 0) {
                                         const maxLeft = canvas.clipPath.width * canvas.getZoom();
@@ -332,14 +329,21 @@
                             lastDifY = distY;
 
                             pausePanning = true;
+
+                            startX = (touch[0].clientX + touch[1].clientX) / 2;
+                            startY = (touch[0].clientY - touch[1].clientY) / 2;
                         }
 
                         if (state == 'move') {
                             const curDifX = distX - lastPosX;
                             const curDifY = distY - lastPosY;
 
+                            const deltaX = (touch[0].clientX + touch[1].clientX) / 2;
+                            const deltaY = (touch[0].clientY + touch[1].clientY) / 2;
+
                             const vpt = canvas.viewportTransform;
-                            const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+
+                            const vptPoint = new fabric.Point(deltaX, deltaY);
 
                             /**
                              * zoom in
@@ -367,6 +371,10 @@
                     }
 
                 });
+
+                const distance = (X0, X1, Y0, Y1) => {
+                    return Math.hypot(X0 - X1, Y0 - Y1);
+                };
 
             </script>        
     </body>
