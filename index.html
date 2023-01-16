@@ -141,11 +141,13 @@
                         case "width":
                             if (imgObj.width > canvas.width) {
                                 scX = canvas.width / imgObj.width;
+                                scY = scX;
                             }
                             break;
                         case "height":
                             if (imgObj.height > canvas.height) {
                                 scY = canvas.height / imgObj.height;
+                                scX = scY;
                             }
                             break;
                     }
