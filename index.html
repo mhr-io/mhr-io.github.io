@@ -82,15 +82,24 @@
                 padding: 2px 0px 0px 0px;
                 margin: 0px 8px 4px 0px;
                 position: fixed;
-                right: 16px;
+                right: 88px;
                 bottom: 30px;
             }
 
             button.zoom-out {
                 padding: 0px 0px 4px 0px;
                 position: fixed;
-                right: 100px; /*base: 8px*/
+                right: 172px; /*base: 8px*/
                 bottom: 34px; /*base: 4px*/
+            }
+
+            button.zoom-reset {
+                font-size: 16px;
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 16px;
+                bottom: 30px;
             }
 
             .navbar button:active {
@@ -112,6 +121,7 @@
         <div class="navbar">
             <button class="btn-zoom zoom-out" onclick="{zoomOut();}">-</button>
             <button class="btn-zoom zoom-in" onclick="{zoonIn();}">+</button>
+            <button class="btn-zoom zoom-reset" onclick="{zoomReset();}">RST</button>
         </div>
         
             <script>
@@ -180,10 +190,9 @@
                 const maxWidth = window.innerWidth - 100;
                 const maxHeight = window.innerHeight - 100;
                 let maxZoom = 1;
+                let zommlimit = 1;
 
                 if (canvas.clipPath.width > maxWidth || canvas.clipPath.height > maxHeight) {
-                    let zommlimit = 1;
-
                     while(canvas.clipPath.width * zommlimit > maxWidth) {
                         zommlimit -= 0.1;
                     }
@@ -219,6 +228,15 @@
 
                         canvas.zoomToPoint(vptPoint, canvas.getZoom() / 1.1);
                     }
+                }
+
+                const zoomReset = () => {
+                    canvas.setZoom(zommlimit);
+
+                    const vpt = canvas.viewportTransform;
+                    vpt[4] = 0;
+                    vpt[5] = 0;
+                    canvas.requestRenderAll();
                 }
 
                 let isDragging = false;
