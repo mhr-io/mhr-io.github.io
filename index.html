@@ -83,14 +83,14 @@
                 margin: 0px 8px 4px 0px;
                 position: fixed;
                 right: 16px;
-                bottom: 16px;
+                bottom: 30px;
             }
 
             button.zoom-out {
                 padding: 0px 0px 4px 0px;
                 position: fixed;
                 right: 100px; /*base: 8px*/
-                bottom: 20px; /*base: 4px*/
+                bottom: 34px; /*base: 4px*/
             }
 
             .navbar button:active {
@@ -115,37 +115,68 @@
         </div>
         
             <script>
-                console.log("width:" + window.innerWidth + " , height:" + window.innerHeight);
-
                 const canvas = new fabric.Canvas("canvas");
                 canvas.setWidth(window.innerWidth);
                 canvas.setHeight(window.innerHeight);
-                canvas.backgroundColor = 'white';
-                canvas.selection = false; // disable group selection
+                canvas.backgroundColor = "white";
+                canvas.selection = false;
 
                 const clipPath = new fabric.Rect({ 
                     width: window.innerWidth , 
-                    height: window.innerHeight });
+                    height: window.innerHeight,
+                });
+
                 canvas.clipPath = clipPath;
 
+                const damavandImg = "https://volcano.si.edu/gallery/photos/GVP-11995.jpg";
+                const monkeyImg = "./monkey.jpeg";
+
+                fabric.util.loadImage(damavandImg, {}).then(function (imgObj) {
+                    let scX = 1;
+                    let scY = 1;
+
+                    const maxDist = imgObj.width > imgObj.height ? "width" : "height";
+
+                    switch (maxDist) {
+                        case "width":
+                            if (imgObj.width > canvas.width) {
+                                scX = canvas.width / imgObj.width;
+                            }
+                            break;
+                        case "height":
+                            if (imgObj.height > canvas.height) {
+                                scY = canvas.height / imgObj.height;
+                            }
+                            break;
+                    }
+
+                    const image = new fabric.Image(imgObj, {
+                        scaleX: scX,
+                        scaleY: scY,
+                        selectable: false,
+                    });
+
+                    canvas.add(image);
+
+                    canvas.renderAll();
+                });
 
                 const newCircle = () => {
                     const circle = new fabric.Circle();
                     circle.set({ radius: 50, fill: 'darkRed', opacity: 0.7 });
-                    circle.set('selectable', true); // make object unselectable
+                    circle.set('selectable', true);
                     canvas.add(circle);
                 }
 
                 const newRect = () => {
                     const rect = new fabric.Rect();
                     rect.set({ width: 100, height: 100, fill: 'darkGreen', opacity: 0.7 });
-                    rect.set('selectable', true); // make object unselectable
+                    rect.set('selectable', true);
                     canvas.add(rect);
                 }
 
                 const maxWidth = window.innerWidth - 100;
                 const maxHeight = window.innerHeight - 100;
-                
                 let maxZoom = 1;
 
                 if (canvas.clipPath.width > maxWidth || canvas.clipPath.height > maxHeight) {
@@ -228,7 +259,6 @@
                 const mouseup = () => {
                     canvas.setViewportTransform(canvas.viewportTransform);
                     isDragging = false;
-                    pausePanning = false;
                 };
 
                 canvas.on("mouse:down", (options) => {
@@ -245,22 +275,83 @@
                     mouseup();
                 });
 
-                let scale = 1;
-                canvas.on("touch:gesture", (options) => {
-                    scale = options.self.scale;
-                });
+                let dragStartX1 = 0;
+                let dragStartY1 = 0;
+                let dragStartX2 = 0;
+                let dragStartY2 = 0;
 
-                let lastDifX = -1;
-                let lastDifY = -1;
-                let pausePanning = false;
-                
-                let startX = 0;
-                let startY = 0;
-                
-                canvas.on("touch:drag", (options) => {
+                canvas.on("touch:gesture", (options) => {
                     const touch = options.e.touches;
                     const state = options.self.state;
-                    
+
+                    if (touch && touch.length == 2) {
+                        const zoom = canvas.getZoom();
+                        const vpWidth = canvas.clipPath.width;
+                        const vpHeight = canvas.clipPath.height;
+                        const scWidth = vpWidth * zoom;
+                        const scHeight = vpHeight * zoom;
+
+                        if (state == 'start') {
+                            dragStartX1 = touch[0].clientX;
+                            dragStartY1 = touch[0].clientY;
+                            dragStartX2 = touch[1].clientX;
+                            dragStartY2 = touch[1].clientY;
+                        }
+
+                        if (state  == 'change') {
+                            const [x1, y1] = [dragStartX1, dragStartY1];
+                            const [x2, y2] = [dragStartX2, dragStartY2];
+                            const [X1, Y1] = [touch[0].clientX, touch[0].clientY];
+                            const [X2, Y2] = [touch[1].clientX, touch[1].clientY];
+
+                            const m = (y2 - y1) / (x2 - x1);
+                            const t = Math.atan(m);
+
+                            const M = (Y2 - Y1) / (X2 - X1);
+                            const T = Math.atan(M);
+
+                            const teta = T - t;
+                            const d1 = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+                            const D2 = Math.sqrt(Math.pow((X2 - X1), 2) + Math.pow((Y2 - Y1), 2));
+                            const d2 = Math.abs(D2 * Math.cos(teta));
+                            const sc = d2 / d1;
+                            const scale = Math.min(Math.max(.1, zoom * sc), 4);
+
+                            canvas.setZoom(scale);
+
+                            const cx = .5 * (x1 + x2);
+                            const cy = .5 * (y1 + y2);
+                            const CX = .5 * (X1 + X2);
+                            const CY = .5 * (Y1 + Y2);
+
+                            const cxPercent = cx / vpWidth;
+                            const cyPercent = cy / vpHeight;
+
+                            const CXPercent = CX / scWidth;
+                            const CYPercent = CY / scHeight;
+
+                            const xDiffPercent = CXPercent - cxPercent;
+                            const yDiffPercent = CYPercent - CYPercent;
+
+                            const xDiffPixel = xDiffPercent * scWidth;
+                            const yDiffPixel = yDiffPercent * scHeight;
+
+                            const vpT = canvas.viewportTransform;
+                            vpT[4] = xDiffPixel;
+                            vpT[5] = yDiffPixel;
+                            canvas.requestRenderAll();
+                        }
+                    }
+                });
+                
+                canvas.on("touch:drag", (options) => {
+                    touchDrag(options);
+                });
+
+                const touchDrag = (options) => {
+                    const touch = options.e.touches;
+                    const state = options.self.state;
+
                     if (touch && touch.length == 1) {
                         const point = new fabric.Point(touch[0].clientX, touch[0].clientY);
                         const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
@@ -275,105 +366,44 @@
                             }
 
                             if (state == 'move') {
-                                if (!pausePanning) {
-                                    const distX = point.x - lastPosX;
-                                    const distY = point.y - lastPosY;
+                                const distX = point.x - lastPosX;
+                                const distY = point.y - lastPosY;
 
-                                    const vpt = canvas.viewportTransform;
+                                const vpt = canvas.viewportTransform;
 
-                                    //console.log(vpt);
-
-                                    if(vpt[4] + distX <= 0) {
-                                        const maxLeft = canvas.clipPath.width * canvas.getZoom();
-                                        if (Math.abs(vpt[4] + distX) < maxLeft - 50) {
-                                            vpt[4] += distX;
-                                        }
-
-                                    } else {
-                                        const maxRight = window.innerWidth - 64;
-                                        if (vpt[4] + distX < maxRight) {
-                                            vpt[4] += distX;
-                                        }
+                                if (vpt[4] + distX <= 0) {
+                                    const maxLeft = canvas.clipPath.width * canvas.getZoom();
+                                    if (Math.abs(vpt[4] + distX) < maxLeft - 50) {
+                                        vpt[4] += distX;
                                     }
 
-                                    if (vpt[5] + distY <= 0) {
-                                        const maxTop = canvas.clipPath.height * canvas.getZoom();
-                                        if (Math.abs(vpt[5] + distY) < maxTop - 50) {
-                                            vpt[5] += distY;
-                                        }
-
-                                    } else {
-                                        const maxTop = window.innerHeight - 120;
-                                        if (vpt[5] + distY < maxTop) {
-                                            vpt[5] += distY;
-                                        }
+                                } else {
+                                    const maxRight = window.innerWidth - 64;
+                                    if (vpt[4] + distX < maxRight) {
+                                        vpt[4] += distX;
                                     }
-
-                                    canvas.requestRenderAll();
-
-                                    lastPosX = point.x;
-                                    lastPosY = point.y;
                                 }
+
+                                if (vpt[5] + distY <= 0) {
+                                    const maxTop = canvas.clipPath.height * canvas.getZoom();
+                                    if (Math.abs(vpt[5] + distY) < maxTop - 50) {
+                                        vpt[5] += distY;
+                                    }
+
+                                } else {
+                                    const maxTop = window.innerHeight - 120;
+                                    if (vpt[5] + distY < maxTop) {
+                                        vpt[5] += distY;
+                                    }
+                                }
+
+                                canvas.requestRenderAll();
+
+                                lastPosX = point.x;
+                                lastPosY = point.y;
                             }
                         }
                     }
-
-                    if (touch && touch.length == 2) {
-                        const distX = Math.abs(touch[1].clientX - touch[0].clientX);
-                        const distY = Math.abs(touch[1].clientY - touch[0].clientY);
-
-                        const zoom = canvas.getZoom();
-
-                        if (state == 'down') {
-                            lastDifX = distX;
-                            lastDifY = distY;
-
-                            pausePanning = true;
-
-                            startX = (touch[0].clientX + touch[1].clientX) / 2;
-                            startY = (touch[0].clientY - touch[1].clientY) / 2;
-                        }
-
-                        if (state == 'move') {
-                            const curDifX = distX - lastPosX;
-                            const curDifY = distY - lastPosY;
-
-                            const deltaX = (touch[0].clientX + touch[1].clientX) / 2;
-                            const deltaY = (touch[0].clientY + touch[1].clientY) / 2;
-
-                            const vpt = canvas.viewportTransform;
-
-                            const vptPoint = new fabric.Point(deltaX, deltaY);
-
-                            /**
-                             * zoom in
-                            */
-                            if (zoom < maxZoom) {
-                                if (curDifX > lastDifX) {
-                                    canvas.zoomToPoint(vptPoint, zoom * 1.04);
-                                }
-                            }
-
-                            /**
-                             * zoom out
-                            */
-                            if (zoom > 0.1) {
-                                if (curDifX < lastDifX) {
-                                    const clipHeight = canvas.clipPath.height * canvas.getZoom();
-                                    if (clipHeight + vptPoint.y > 64) {
-                                        canvas.zoomToPoint(vptPoint, zoom / 1.04);
-                                    }
-                                }
-                            }
-
-                            lastDifX = curDifX;
-                        }
-                    }
-
-                });
-
-                const distance = (X0, X1, Y0, Y1) => {
-                    return Math.hypot(X0 - X1, Y0 - Y1);
                 };
 
             </script>        
