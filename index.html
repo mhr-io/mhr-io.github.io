@@ -268,7 +268,6 @@
                         const vpt = canvas.viewportTransform;
                         vpt[4] += distX;
                         vpt[5] += distY;
-
                         canvas.requestRenderAll();
 
                         lastPosX = options.e.clientX;
@@ -299,7 +298,10 @@
                 let dragStartY1 = 0;
                 let dragStartX2 = 0;
                 let dragStartY2 = 0;
-
+                let startZoom = 1;
+                let offsetX = 0;
+                let offsetY = 0;
+                
                 canvas.on("touch:gesture", (options) => {
                     const touch = options.e.touches;
                     const state = options.self.state;
@@ -308,14 +310,20 @@
                         const zoom = canvas.getZoom();
                         const vpWidth = canvas.clipPath.width;
                         const vpHeight = canvas.clipPath.height;
-                        const scWidth = vpWidth * zoom;
-                        const scHeight = vpHeight * zoom;
+                        const startWidth = vpWidth * startZoom;
+                        const startHeight = vpHeight * startZoom;
 
                         if (state == 'start') {
                             dragStartX1 = touch[0].clientX;
                             dragStartY1 = touch[0].clientY;
                             dragStartX2 = touch[1].clientX;
                             dragStartY2 = touch[1].clientY;
+
+                            const vpt = canvas.viewportTransform;
+                            offsetX = vpt[4];
+                            offsetY = vpt[5];
+
+                            startZoom = zoom;
                         }
 
                         if (state  == 'change') {
@@ -335,17 +343,18 @@
                             const D2 = Math.sqrt(Math.pow((X2 - X1), 2) + Math.pow((Y2 - Y1), 2));
                             const d2 = Math.abs(D2 * Math.cos(teta));
                             const sc = d2 / d1;
-                            const scale = Math.min(Math.max(.1, zoom * sc), 4);
+                            const scale = Math.min(Math.max(.1, sc * startZoom), 4);
 
-                            canvas.setZoom(sc);
+                            const scWidth = vpWidth * scale;
+                            const scHeight = vpHeight * scale;
 
                             const cx = .5 * (x1 + x2);
                             const cy = .5 * (y1 + y2);
                             const CX = .5 * (X1 + X2);
                             const CY = .5 * (Y1 + Y2);
 
-                            const cxPercent = cx / vpWidth;
-                            const cyPercent = cy / vpHeight;
+                            const cxPercent = cx / startWidth;
+                            const cyPercent = cy / startHeight;
 
                             const CXPercent = CX / scWidth;
                             const CYPercent = CY / scHeight;
@@ -353,10 +362,15 @@
                             const xDiffPercent = CXPercent - cxPercent;
                             const yDiffPercent = CYPercent - cyPercent;
 
-                            const xDiffPixel = xDiffPercent * scWidth;
-                            const yDiffPixel = yDiffPercent * scHeight;
+                            const leftPercent = offsetX / startWidth;
+                            const topPercent = offsetY / startHeight;
+
+                            const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
+                            const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
 
                             const vpT = canvas.viewportTransform;
+                            vpT[0] = scale;
+                            vpT[3] = scale;
                             vpT[4] = xDiffPixel;
                             vpT[5] = yDiffPixel;
                             canvas.requestRenderAll();
