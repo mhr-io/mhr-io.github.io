@@ -41,8 +41,23 @@
                 background-color: darkgreen;
                 transition-duration: 0.14s;
                 font-family: inherit; /* Important for vertical align on mobile phones */
-                margin: 8px 8px 8px 0px; /* Important for vertical align on mobile phones */
+                margin: 8px 0px 8px 0px; /* Important for vertical align on mobile phones */
                 /* top, right, bottom, left*/
+            }
+
+            .btn-size {
+                font-size: 20px;
+                color: white;
+                background-color: inherit;
+                border: none;
+                /* border: 2px solid white; */
+                /* padding: 7px 32px 7px 32px; */
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                /* position: fixed; */
+                font-family: inherit;
+                margin: 8px 8px 8px 4px;
             }
 
             .topnav button:active {
@@ -78,7 +93,23 @@
                 height: 64px;
             }
 
+            button.zoom-out {
+                padding: 0px 0px 4px 0px;
+                position: fixed;
+                right: 256px; /*base: 8px*/
+                bottom: 34px; /*base: 4px*/
+            }
+
             button.zoom-in {
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 172px;
+                bottom: 30px;
+            }
+
+            button.zoom-reset {
+                font-size: 16px;
                 padding: 2px 0px 0px 0px;
                 margin: 0px 8px 4px 0px;
                 position: fixed;
@@ -86,14 +117,7 @@
                 bottom: 30px;
             }
 
-            button.zoom-out {
-                padding: 0px 0px 4px 0px;
-                position: fixed;
-                right: 172px; /*base: 8px*/
-                bottom: 34px; /*base: 4px*/
-            }
-
-            button.zoom-reset {
+            button.zoom-one {
                 font-size: 16px;
                 padding: 2px 0px 0px 0px;
                 margin: 0px 8px 4px 0px;
@@ -107,6 +131,13 @@
                 border: 2px solid #333;
                 color: #333;
             }
+
+            #msg {
+                width: 100%;
+                height: 72px;
+                overflow: scroll;
+                background-color: rgb(240, 240, 240);
+            }
             
         </style>
     </head>
@@ -114,6 +145,11 @@
         <div class="topnav">
             <button class="btn-circle" onclick="{newCircle();}">circle</button>
             <button class="btn-rect" onclick="{newRect();}">rect</button>
+            <button class="btn-size" onclick="{onSize();}">Size</button>
+        </div>
+
+        <div>
+            <p id="msg"></p>
         </div>
 
         <canvas id="canvas"></canvas>
@@ -122,98 +158,97 @@
             <button class="btn-zoom zoom-out" onclick="{zoomOut();}">-</button>
             <button class="btn-zoom zoom-in" onclick="{zoonIn();}">+</button>
             <button class="btn-zoom zoom-reset" onclick="{zoomReset();}">RST</button>
+            <button class="btn-zoom zoom-one" onclick="{zoomOne();}">1</button>
         </div>
         
             <script>
+                const showMessage = (message) => {
+                    const paragraph = document.getElementById("msg");
+
+                    const text = document.createTextNode(message);
+                    const br = document.createElement('br');
+                    
+                    paragraph.appendChild(text);
+                    paragraph.appendChild(br);
+
+                    console.log(message);
+                }
+
                 const canvas = new fabric.Canvas("canvas");
                 canvas.setWidth(window.innerWidth);
                 canvas.setHeight(window.innerHeight);
                 canvas.backgroundColor = "white";
                 canvas.selection = false;
-                
-                const widthInch = 5;
-                const heightInch = 5;
 
-                const addViewport = (inchWidth, inchHeight) => {
-                    let p = 1;
-                    if (inchWidth < inchHeight) {
-                        p = canvas.width / inchWidth;
-                    } else {
-                        p = canvas.height / inchHeight;
-                    }
+                showMessage('width:' + window.innerWidth + ' height:' + window.innerHeight);
 
-                    const ppi = Math.max(widthInch * 72, heightInch * 72) / Math.round(p);
-                    const s = Math.round(ppi * 10) / 10;
+                let ppi = 72;
+                let bannerWidth = 1;
+                let bannerHeight = 1;
 
-                    const w = widthInch * 72;
-                    const h = heightInch * 72;
+                const calViewportSize = (inchWidth, inchHeight) => {
+                    ppi = Math.min(window.innerWidth, window.innerHeight) / Math.max(inchWidth, inchHeight);
 
-                    return clipPath = new fabric.Rect({
-                        width: w,
-                        height: h,
-                        scale: s,
-                    });
+                    const pixelWidth = inchWidth * 72;
+                    const pixelHeight = inchHeight * 72;
+
+                    const size = [pixelWidth, pixelHeight];
+
+                    return size;
                 }
 
-                canvas.clipPath = addViewport(widthInch, heightInch);
-
-                const maxWidth = window.innerWidth - 100;
-                const maxHeight = window.innerHeight - 100;
                 let maxZoom = 1;
-                let zommlimit = 1;
+                let zoomLimit = 1;
 
-                if (canvas.clipPath.width > maxWidth || canvas.clipPath.height > maxHeight) {
-                    while (canvas.clipPath.width * zommlimit > maxWidth) {
-                        zommlimit -= 0.1;
-                    }
+                const setViewport = (inchWidth, inchHeight) => {
+                    const size = calViewportSize(inchWidth, inchHeight);
 
-                    while (canvas.clipPath.height * zommlimit > maxHeight) {
-                        zommlimit -= 0.1;
-                    }
+                    const clipPath = new fabric.Rect({
+                        width: size[0],
+                        height: size[1],
+                    });
+                    canvas.clipPath = clipPath;
 
-                    const vpt = canvas.viewportTransform;
+                    showMessage('ppi:' + ppi);
 
-                    const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+                    const scale = ppi / 72;
 
-                    canvas.zoomToPoint(vptPoint, canvas.getZoom() * zommlimit);
+                    zoomLimit = scale * .898;
 
-                    maxZoom = zommlimit * 4;
+                    canvas.setZoom(zoomLimit);
+
+                    showMessage('zoom:' + Math.round(canvas.getZoom() * 100) / 100);
+
+                    maxZoom = zoomLimit * 4;
                 }
 
-                const damavandImg = "https://volcano.si.edu/gallery/photos/GVP-11995.jpg";
-                const monkeyImg = "./monkey.jpeg";
+                let imgScale = 1;
+                
+                const loadImage = () => {
+                    const damavandImg = "https://volcano.si.edu/gallery/photos/GVP-11995.jpg";
+                    const monkeyImg = "./monkey.jpeg";
 
-                fabric.util.loadImage(monkeyImg, {}).then(function (imgObj) {
-                    let scX = 1;
-                    let scY = 1;
+                    fabric.util.loadImage(monkeyImg, {}).then(function (imgObj) {
+                        const inchWidth = imgObj.width / 72;
+                        const inchHeight = imgObj.height / 72;
 
-                    const maxDist = imgObj.width > imgObj.height ? "width" : "height";
+                        const sc = 1 / Math.max(inchWidth / bannerWidth, inchHeight / bannerHeight);
 
-                    switch (maxDist) {
-                        case "width":
-                            if (imgObj.width > canvas.width) {
-                                scX = canvas.width / imgObj.width;
-                                scY = scX;
-                            }
-                            break;
-                        case "height":
-                            if (imgObj.height > canvas.height) {
-                                scY = canvas.height / imgObj.height;
-                                scX = scY;
-                            }
-                            break;
-                    }
+                        imgScale = sc;
+                        
+                        const image = new fabric.Image(imgObj, {
+                            scaleX: sc,
+                            scaleY: sc,
+                            selectable: false,
+                        });
 
-                    const image = new fabric.Image(imgObj, {
-                        scaleX: scX,
-                        scaleY: scY,
-                        selectable: false,
+                        canvas.add(image);
+
+                        canvas.renderAll();
+
+                        showMessage('imgScale:' + image.scaleX);
                     });
-
-                    canvas.add(image);
-
-                    canvas.renderAll();
-                });
+                }
 
                 const newCircle = () => {
                     const circle = new fabric.Circle();
@@ -227,6 +262,25 @@
                     rect.set({ width: 100, height: 100, fill: 'darkGreen', opacity: 0.7 });
                     rect.set('selectable', true);
                     canvas.add(rect);
+                }
+
+                const init = () => {
+                    setViewport(bannerWidth, bannerHeight);
+                    loadImage();
+                }
+
+                const onSize = () => {
+                    let wInch = prompt("Width by Inch:", '');
+                    let hInch = prompt("Height by Inch:", '');
+
+                    let result = confirm(`Width: ${wInch ? wInch : 1} inch , Height: ${hInch ? hInch : 1} inch. Is it OK?`);
+
+                    if (result) {
+                        bannerWidth = wInch ? wInch : 1;
+                        bannerHeight = hInch ? hInch : 1;
+                        
+                        init();
+                    }
                 }
 
                 const zoonIn = () => {
@@ -250,7 +304,16 @@
                 }
 
                 const zoomReset = () => {
-                    canvas.setZoom(zommlimit);
+                    canvas.setZoom(zoomLimit);
+
+                    const vpt = canvas.viewportTransform;
+                    vpt[4] = 0;
+                    vpt[5] = 0;
+                    canvas.requestRenderAll();
+                }
+
+                const zoomOne = () => {
+                    canvas.setZoom(1);
 
                     const vpt = canvas.viewportTransform;
                     vpt[4] = 0;
@@ -326,6 +389,7 @@
                     const state = options.self.state;
 
                     if (touch && touch.length == 2) {
+
                         const zoom = canvas.getZoom();
                         const vpWidth = canvas.clipPath.width;
                         const vpHeight = canvas.clipPath.height;
@@ -362,7 +426,7 @@
                             const D2 = Math.sqrt(Math.pow((X2 - X1), 2) + Math.pow((Y2 - Y1), 2));
                             const d2 = Math.abs(D2 * Math.cos(teta));
                             const sc = d2 / d1;
-                            const scale = Math.min(Math.max(.1, sc * startZoom), 4);
+                            const scale = Math.min(Math.max(.1, sc * startZoom), maxZoom);
 
                             const scWidth = vpWidth * scale;
                             const scHeight = vpHeight * scale;
@@ -458,6 +522,8 @@
                         }
                     }
                 };
+
+                init();
 
             </script>        
     </body>
