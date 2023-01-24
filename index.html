@@ -357,9 +357,12 @@
                     }
                 };
 
+                let isGesture = false;
+
                 const mouseup = () => {
                     canvas.setViewportTransform(canvas.viewportTransform);
                     isDragging = false;
+                    isGesture = false;
                 };
 
                 canvas.on("mouse:down", (options) => {
@@ -389,7 +392,6 @@
                     const state = options.self.state;
 
                     if (touch && touch.length == 2) {
-
                         const zoom = canvas.getZoom();
                         const vpWidth = canvas.clipPath.width;
                         const vpHeight = canvas.clipPath.height;
@@ -460,6 +462,9 @@
                         }
                     }
                 });
+
+                let startMoveX = 0;
+                let startMoveY = 0;
                 
                 canvas.on("touch:drag", (options) => {
                     touchDrag(options);
@@ -469,57 +474,70 @@
                     const touch = options.e.touches;
                     const state = options.self.state;
 
+                    if (touch && touch.length == 2) {
+                        isGesture = true;
+                    }
+
                     if (touch && touch.length == 1) {
-                        const point = new fabric.Point(touch[0].clientX, touch[0].clientY);
                         const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
 
                         if (getObj == 'null') {
+
+                            const zoom = canvas.getZoom();
+                            const vpWidth = canvas.clipPath.width;
+                            const vpHeight = canvas.clipPath.height;
+
                             if (state == 'down') {
                                 /**
                                  * lastPos
                                 */
-                                lastPosX = point.x;
-                                lastPosY = point.y;
+                                startMoveX = touch[0].clientX;
+                                startMoveY = touch[0].clientY;
+
+                                const vpt = canvas.viewportTransform;
+                                offsetX = vpt[4];
+                                offsetY = vpt[5];
                             }
 
                             if (state == 'move') {
-                                const distX = point.x - lastPosX;
-                                const distY = point.y - lastPosY;
-
-                                const vpt = canvas.viewportTransform;
-
-                                if (vpt[4] + distX <= 0) {
-                                    const maxLeft = canvas.clipPath.width * canvas.getZoom();
-                                    if (Math.abs(vpt[4] + distX) < maxLeft - 50) {
-                                        vpt[4] += distX;
-                                    }
-
-                                } else {
-                                    const maxRight = window.innerWidth - 64;
-                                    if (vpt[4] + distX < maxRight) {
-                                        vpt[4] += distX;
-                                    }
+                                if (isGesture) {
+                                    startMoveX = touch[0].clientX;
+                                    startMoveY = touch[0].clientY;
                                 }
 
-                                if (vpt[5] + distY <= 0) {
-                                    const maxTop = canvas.clipPath.height * canvas.getZoom();
-                                    if (Math.abs(vpt[5] + distY) < maxTop - 50) {
-                                        vpt[5] += distY;
-                                    }
+                                const cx = startMoveX;
+                                const cy = startMoveY;
+                                const CX = touch[0].clientX;
+                                const CY = touch[0].clientY;
 
-                                } else {
-                                    const maxTop = window.innerHeight - 120;
-                                    if (vpt[5] + distY < maxTop) {
-                                        vpt[5] += distY;
-                                    }
-                                }
+                                const scale = zoom;
 
+                                const scWidth = vpWidth * scale;
+                                const scHeight = vpHeight * scale;
+
+                                const cxPercent = cx / scWidth;
+                                const cyPercent = cy / scHeight;
+
+                                const CXPercent = CX / scWidth;
+                                const CYPercent = CY / scHeight;
+
+                                const xDiffPercent = CXPercent - cxPercent;
+                                const yDiffPercent = CYPercent - cyPercent;
+
+                                const leftPercent = offsetX / scWidth;
+                                const topPercent = offsetY / scHeight;
+
+                                const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
+                                const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
+
+                                const vpT = canvas.viewportTransform;
+                                vpT[4] = xDiffPixel;
+                                vpT[5] = yDiffPixel;
                                 canvas.requestRenderAll();
-
-                                lastPosX = point.x;
-                                lastPosY = point.y;
                             }
                         }
+
+                        isGesture = false;
                     }
                 };
 
