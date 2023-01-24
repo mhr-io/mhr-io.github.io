@@ -386,18 +386,61 @@
                 let startZoom = 1;
                 let offsetX = 0;
                 let offsetY = 0;
+
+                const pan = (startX, 
+                            startY, 
+                            changeX, 
+                            changeY, 
+                            startLeft, 
+                            startTop, 
+                            startScale, 
+                            changeScale, 
+                            viewportWidth, 
+                            viewportHeight) => {
+                    const startWidth = viewportWidth * startScale;
+                    const startHeight = viewportHeight * startScale;
+
+                    const scWidth = viewportWidth * changeScale;
+                    const scHeight = viewportHeight * changeScale;
+
+                    const cx = startX;
+                    const cy = startY;
+                    const CX = changeX;
+                    const CY = changeY;
+
+                    const cxPercent = cx / startWidth;
+                    const cyPercent = cy / startHeight;
+
+                    const CXPercent = CX / scWidth;
+                    const CYPercent = CY / scHeight;
+
+                    const xDiffPercent = CXPercent - cxPercent;
+                    const yDiffPercent = CYPercent - cyPercent;
+
+                    const leftPercent = startLeft / startWidth;
+                    const topPercent = startTop / startHeight;
+
+                    const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
+                    const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
+
+                    const vpT = canvas.viewportTransform;
+
+                    if (changeScale !== startScale) {
+                        vpT[0] = changeScale;
+                        vpT[3] = changeScale;
+                    }
+
+                    vpT[4] = xDiffPixel;
+                    vpT[5] = yDiffPixel;
+
+                    canvas.requestRenderAll();
+                }
                 
                 canvas.on("touch:gesture", (options) => {
                     const touch = options.e.touches;
                     const state = options.self.state;
 
                     if (touch && touch.length == 2) {
-                        const zoom = canvas.getZoom();
-                        const vpWidth = canvas.clipPath.width;
-                        const vpHeight = canvas.clipPath.height;
-                        const startWidth = vpWidth * startZoom;
-                        const startHeight = vpHeight * startZoom;
-
                         if (state == 'start') {
                             dragStartX1 = touch[0].clientX;
                             dragStartY1 = touch[0].clientY;
@@ -408,7 +451,7 @@
                             offsetX = vpt[4];
                             offsetY = vpt[5];
 
-                            startZoom = zoom;
+                            startZoom = canvas.getZoom();
                         }
 
                         if (state  == 'change') {
@@ -430,35 +473,15 @@
                             const sc = d2 / d1;
                             const scale = Math.min(Math.max(.1, sc * startZoom), maxZoom);
 
-                            const scWidth = vpWidth * scale;
-                            const scHeight = vpHeight * scale;
-
                             const cx = .5 * (x1 + x2);
                             const cy = .5 * (y1 + y2);
                             const CX = .5 * (X1 + X2);
                             const CY = .5 * (Y1 + Y2);
 
-                            const cxPercent = cx / startWidth;
-                            const cyPercent = cy / startHeight;
-
-                            const CXPercent = CX / scWidth;
-                            const CYPercent = CY / scHeight;
-
-                            const xDiffPercent = CXPercent - cxPercent;
-                            const yDiffPercent = CYPercent - cyPercent;
-
-                            const leftPercent = offsetX / startWidth;
-                            const topPercent = offsetY / startHeight;
-
-                            const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
-                            const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
-
-                            const vpT = canvas.viewportTransform;
-                            vpT[0] = scale;
-                            vpT[3] = scale;
-                            vpT[4] = xDiffPixel;
-                            vpT[5] = yDiffPixel;
-                            canvas.requestRenderAll();
+                            pan(cx, cy, CX, CY, 
+                                offsetX, offsetY, 
+                                startZoom, scale, 
+                                canvas.clipPath.width, canvas.clipPath.height);
                         }
                     }
                 });
@@ -467,10 +490,6 @@
                 let startMoveY = 0;
                 
                 canvas.on("touch:drag", (options) => {
-                    touchDrag(options);
-                });
-
-                const touchDrag = (options) => {
                     const touch = options.e.touches;
                     const state = options.self.state;
 
@@ -482,15 +501,7 @@
                         const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
 
                         if (getObj == 'null') {
-
-                            const zoom = canvas.getZoom();
-                            const vpWidth = canvas.clipPath.width;
-                            const vpHeight = canvas.clipPath.height;
-
                             if (state == 'down') {
-                                /**
-                                 * lastPos
-                                */
                                 startMoveX = touch[0].clientX;
                                 startMoveY = touch[0].clientY;
 
@@ -503,6 +514,10 @@
                                 if (isGesture) {
                                     startMoveX = touch[0].clientX;
                                     startMoveY = touch[0].clientY;
+
+                                    const vpt = canvas.viewportTransform;
+                                    offsetX = vpt[4];
+                                    offsetY = vpt[5];
                                 }
 
                                 const cx = startMoveX;
@@ -510,36 +525,16 @@
                                 const CX = touch[0].clientX;
                                 const CY = touch[0].clientY;
 
-                                const scale = zoom;
-
-                                const scWidth = vpWidth * scale;
-                                const scHeight = vpHeight * scale;
-
-                                const cxPercent = cx / scWidth;
-                                const cyPercent = cy / scHeight;
-
-                                const CXPercent = CX / scWidth;
-                                const CYPercent = CY / scHeight;
-
-                                const xDiffPercent = CXPercent - cxPercent;
-                                const yDiffPercent = CYPercent - cyPercent;
-
-                                const leftPercent = offsetX / scWidth;
-                                const topPercent = offsetY / scHeight;
-
-                                const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
-                                const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
-
-                                const vpT = canvas.viewportTransform;
-                                vpT[4] = xDiffPixel;
-                                vpT[5] = yDiffPixel;
-                                canvas.requestRenderAll();
+                                pan(cx, cy, CX, CY, 
+                                    offsetX, offsetY, 
+                                    canvas.getZoom(), canvas.getZoom(), 
+                                    canvas.clipPath.width, canvas.clipPath.height);
                             }
                         }
 
                         isGesture = false;
                     }
-                };
+                });
 
                 init();
 
