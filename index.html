@@ -283,110 +283,6 @@
                     }
                 }
 
-                const zoonIn = () => {
-                    if (canvas.getZoom() < maxZoom) {
-                        const vpt = canvas.viewportTransform;
-                        
-                        const vptPoint = new fabric.Point(vpt[4], vpt[5]);
-
-                        canvas.zoomToPoint(vptPoint, canvas.getZoom() * 1.1);
-                    }
-                }
-
-                const zoomOut = () => {
-                    if (canvas.getZoom() > 0.1) {
-                        const vpt = canvas.viewportTransform;
-
-                        const vptPoint = new fabric.Point(vpt[4], vpt[5]);
-
-                        canvas.zoomToPoint(vptPoint, canvas.getZoom() / 1.1);
-                    }
-                }
-
-                const zoomReset = () => {
-                    canvas.setZoom(zoomLimit);
-
-                    const vpt = canvas.viewportTransform;
-                    vpt[4] = 0;
-                    vpt[5] = 0;
-                    canvas.requestRenderAll();
-                }
-
-                const zoomOne = () => {
-                    canvas.setZoom(1);
-
-                    const vpt = canvas.viewportTransform;
-                    vpt[4] = 0;
-                    vpt[5] = 0;
-                    canvas.requestRenderAll();
-                }
-
-                let isDragging = false;
-                let lastPosX = 0;
-                let lastPosY = 0;
-
-                const mousedown = (options) => {
-                    const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
-                    if (getObj == 'null') {
-                        const e = options.e;
-
-                        const pointX = e.clientX ? e.clientX : undefined;
-                        const pointY = e.clientY ? e.clientY : undefined;
-
-                        if (pointX !== undefined && pointY !== undefined) {
-                            isDragging = true;
-
-                            lastPosX = pointX;
-                            lastPosY = pointY;
-                        }
-                    }
-                };
-
-                const mousemove = (options) => {
-                    if (isDragging) {
-                        const distX = options.e.clientX - lastPosX;
-                        const distY = options.e.clientY - lastPosY;
-
-                        const vpt = canvas.viewportTransform;
-                        vpt[4] += distX;
-                        vpt[5] += distY;
-                        canvas.requestRenderAll();
-
-                        lastPosX = options.e.clientX;
-                        lastPosY = options.e.clientY;
-                    }
-                };
-
-                let isGesture = false;
-
-                const mouseup = () => {
-                    canvas.setViewportTransform(canvas.viewportTransform);
-                    isDragging = false;
-                    isGesture = false;
-                };
-
-                canvas.on("mouse:down", (options) => {
-                    mousedown(options);
-                    
-                });
-
-                canvas.on("mouse:move", (options) => {
-                    mousemove(options);
-                    lastDif = -1;
-                });
-
-                canvas.on("mouse:up", (options) => {
-                    mouseup();
-                });
-
-                let dragStartX1 = 0;
-                let dragStartY1 = 0;
-                let dragStartX2 = 0;
-                let dragStartY2 = 0;
-                let startZoom = 1;
-                let offsetX = 0;
-                let offsetY = 0;
-
                 const pan = (startX, 
                             startY, 
                             changeX, 
@@ -430,11 +326,137 @@
                         vpT[3] = changeScale;
                     }
 
-                    vpT[4] = xDiffPixel;
-                    vpT[5] = yDiffPixel;
+                    const minLeft = window.innerWidth * .08;
+                    const minRight = window.innerWidth * .12;
+                    const minTop = window.innerHeight * .06;
+                    const minBottom = window.innerHeight * .22;
+
+                    let left = 0;
+                    let top = 0;
+
+                    if (xDiffPixel < 1) {
+                        left = scWidth + xDiffPixel > minLeft ? xDiffPixel : minLeft - scWidth;
+                    }
+
+                    if (xDiffPixel > 1) {
+                        left = window.innerWidth - xDiffPixel > minRight ? xDiffPixel : window.innerWidth - minRight;
+                    }
+
+                    if (yDiffPixel < 1) {
+                        top = scHeight + yDiffPixel > minTop ? yDiffPixel : minTop - scHeight;
+                    }
+
+                    if (yDiffPixel > 1) {
+                        top = window.innerHeight - yDiffPixel > minBottom ? yDiffPixel : window.innerHeight - minBottom;
+                    }
+
+                    vpT[4] = left;
+                    vpT[5] = top;
 
                     canvas.requestRenderAll();
                 }
+
+                const zoonIn = () => {
+                    if (canvas.getZoom() < maxZoom) {
+                        const vpt = canvas.viewportTransform;
+                        
+                        const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+
+                        canvas.zoomToPoint(vptPoint, canvas.getZoom() * 1.1);
+                    }
+                }
+
+                const zoomOut = () => {
+                    if (canvas.getZoom() > 0.1) {
+                        const vpt = canvas.viewportTransform;
+
+                        const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+
+                        canvas.zoomToPoint(vptPoint, canvas.getZoom() / 1.1);
+                    }
+                }
+
+                const zoomReset = () => {
+                    canvas.setZoom(zoomLimit);
+
+                    const vpt = canvas.viewportTransform;
+                    vpt[4] = 0;
+                    vpt[5] = 0;
+                    canvas.requestRenderAll();
+                }
+
+                const zoomOne = () => {
+                    canvas.setZoom(1);
+
+                    const vpt = canvas.viewportTransform;
+                    vpt[4] = 0;
+                    vpt[5] = 0;
+                    canvas.requestRenderAll();
+                }
+
+                let isDragging = false;
+                let lastPosX = 0;
+                let lastPosY = 0;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                const mousedown = (options) => {
+                    const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
+                    if (getObj == 'null') {
+                        const e = options.e;
+
+                        const pointX = e.clientX ? e.clientX : undefined;
+                        const pointY = e.clientY ? e.clientY : undefined;
+
+                        if (pointX !== undefined && pointY !== undefined) {
+                            isDragging = true;
+
+                            lastPosX = pointX;
+                            lastPosY = pointY;
+
+                            const vpt = canvas.viewportTransform;
+                            offsetX = vpt[4];
+                            offsetY = vpt[5];
+                        }
+                    }
+                };
+
+                const mousemove = (options) => {
+                    if (isDragging) {
+                        pan(lastPosX, lastPosY, options.e.clientX, options.e.clientY,
+                            offsetX, offsetY,
+                            canvas.getZoom(), canvas.getZoom(),
+                            canvas.clipPath.width, canvas.clipPath.height);
+                    }
+                };
+
+                let isGesture = false;
+
+                const mouseup = () => {
+                    canvas.setViewportTransform(canvas.viewportTransform);
+                    isDragging = false;
+                    isGesture = false;
+                };
+
+                canvas.on("mouse:down", (options) => {
+                    mousedown(options);
+                    
+                });
+
+                canvas.on("mouse:move", (options) => {
+                    mousemove(options);
+                    lastDif = -1;
+                });
+
+                canvas.on("mouse:up", (options) => {
+                    mouseup();
+                });
+
+                let dragStartX1 = 0;
+                let dragStartY1 = 0;
+                let dragStartX2 = 0;
+                let dragStartY2 = 0;
+                let startZoom = 1;
                 
                 canvas.on("touch:gesture", (options) => {
                     const touch = options.e.touches;
