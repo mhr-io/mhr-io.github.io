@@ -8,13 +8,32 @@
         <style>
             body {
                 background-color: rgb(230, 230, 230);
+                margin: 0px;
+            }
+
+            .canvas-container {
+                margin-top: 60px;
+                position: relative;
+            }
+
+            #canvas {
+                top: 60px;
+                position: absolute;
             }
 
             .topnav {
                 background-color: rgb(51, 51, 51);
                 overflow: hidden;
-                margin: 0px;
+                position: fixed;
+                top: 0px;
+                left: 0px;
                 width: 100%;
+                height: 60px;
+            }
+
+            .topnav button:active {
+                background-color: inheritdd;
+                border: 2px solid rgb(51, 51, 51);
             }
 
             .btn-circle {
@@ -26,8 +45,9 @@
                 padding: 20px;
                 background-color: darkred;
                 transition-duration: 0.14s;
-                font-family: inherit; /* Important for vertical align on mobile phones */
-                margin: 8px 4px 8px 8px; /* Important for vertical align on mobile phones */
+                font-family: inherit;
+                position: fixed;
+                margin: 8px 4px 8px 16px;
                 /* top, right, bottom, left*/
             }
 
@@ -40,8 +60,9 @@
                 padding: 20px;
                 background-color: darkgreen;
                 transition-duration: 0.14s;
-                font-family: inherit; /* Important for vertical align on mobile phones */
-                margin: 8px 0px 8px 0px; /* Important for vertical align on mobile phones */
+                font-family: inherit;
+                position: fixed;
+                margin: 8px 0px 8px 74px;
                 /* top, right, bottom, left*/
             }
 
@@ -50,19 +71,13 @@
                 color: white;
                 background-color: inherit;
                 border: none;
-                /* border: 2px solid white; */
-                /* padding: 7px 32px 7px 32px; */
                 text-align: center;
                 text-decoration: none;
                 display: inline-block;
-                /* position: fixed; */
                 font-family: inherit;
-                margin: 8px 8px 8px 4px;
-            }
-
-            .topnav button:active {
-                background-color: inheritdd;
-                border: 2px solid rgb(51, 51, 51);
+                position: fixed;
+                margin: 14px 8px 8px 124px;
+                /* top, right, bottom, left*/
             }
 
             .navbar {
@@ -97,7 +112,7 @@
                 padding: 0px 0px 4px 0px;
                 position: fixed;
                 right: 256px; /*base: 8px*/
-                bottom: 34px; /*base: 4px*/
+                bottom: 12px; /*base: 4px*/
             }
 
             button.zoom-in {
@@ -105,7 +120,7 @@
                 margin: 0px 8px 4px 0px;
                 position: fixed;
                 right: 172px;
-                bottom: 30px;
+                bottom: 8px;
             }
 
             button.zoom-reset {
@@ -114,7 +129,7 @@
                 margin: 0px 8px 4px 0px;
                 position: fixed;
                 right: 88px;
-                bottom: 30px;
+                bottom: 8px;
             }
 
             button.zoom-one {
@@ -123,20 +138,13 @@
                 margin: 0px 8px 4px 0px;
                 position: fixed;
                 right: 16px;
-                bottom: 30px;
+                bottom: 8px;
             }
 
             .navbar button:active {
                 background-color: white;
                 border: 2px solid #333;
                 color: #333;
-            }
-
-            #msg {
-                width: 100%;
-                height: 72px;
-                overflow: scroll;
-                background-color: rgb(240, 240, 240);
             }
             
         </style>
@@ -146,10 +154,6 @@
             <button class="btn-circle" onclick="{newCircle();}">circle</button>
             <button class="btn-rect" onclick="{newRect();}">rect</button>
             <button class="btn-size" onclick="{onSize();}">Size</button>
-        </div>
-
-        <div>
-            <p id="msg"></p>
         </div>
 
         <canvas id="canvas"></canvas>
@@ -162,8 +166,8 @@
         </div>
         
             <script>
-                const showMessage = (message) => {
-                    const paragraph = document.getElementById("msg");
+                const showMessage = (message, element) => {
+                    const paragraph = document.getElementById("element");
 
                     const text = document.createTextNode(message);
                     const br = document.createElement('br');
@@ -179,8 +183,6 @@
                 canvas.setHeight(window.innerHeight);
                 canvas.backgroundColor = "white";
                 canvas.selection = false;
-
-                showMessage('width:' + window.innerWidth + ' height:' + window.innerHeight);
 
                 let ppi = 72;
                 let bannerWidth = 1;
@@ -209,15 +211,11 @@
                     });
                     canvas.clipPath = clipPath;
 
-                    showMessage('ppi:' + ppi);
-
                     const scale = ppi / 72;
 
                     zoomLimit = scale * .898;
 
                     canvas.setZoom(zoomLimit);
-
-                    showMessage('zoom:' + Math.round(canvas.getZoom() * 100) / 100);
 
                     maxZoom = zoomLimit * 4;
                 }
@@ -228,7 +226,7 @@
                     const damavandImg = "https://volcano.si.edu/gallery/photos/GVP-11995.jpg";
                     const monkeyImg = "./monkey.jpeg";
 
-                    fabric.util.loadImage(monkeyImg, {}).then(function (imgObj) {
+                    fabric.util.loadImage(damavandImg, {}).then(function (imgObj) {
                         const inchWidth = imgObj.width / 72;
                         const inchHeight = imgObj.height / 72;
 
@@ -245,8 +243,6 @@
                         canvas.add(image);
 
                         canvas.renderAll();
-
-                        showMessage('imgScale:' + image.scaleX);
                     });
                 }
 
