@@ -36,38 +36,39 @@
                 border: 2px solid rgb(51, 51, 51);
             }
 
-            .btn-circle {
+            .notext {
                 font-size: 0px;
                 border: 2px solid white;
-                border-radius: 50%;
                 outline: none;
                 color: white;
                 padding: 20px;
-                background-color: darkred;
                 transition-duration: 0.14s;
                 font-family: inherit;
                 position: fixed;
+            }
+
+            .circle {
+                border-radius: 50%;
+            }
+
+            .rect {
+                border-radius: 2px;
+            }
+
+            #btn-circle {
+                background-color: darkred;
                 margin: 8px 4px 8px 16px;
                 /* top, right, bottom, left*/
             }
 
-            .btn-rect {
-                font-size: 0px;
-                border: 2px solid white;
-                border-radius: 2px;
-                outline: none;
-                color: white;
-                padding: 20px;
+            #btn-rect {
                 background-color: darkgreen;
-                transition-duration: 0.14s;
-                font-family: inherit;
-                position: fixed;
                 margin: 8px 0px 8px 74px;
                 /* top, right, bottom, left*/
             }
 
-            .btn-size {
-                font-size: 20px;
+            .solid {
+                font-size: 16px;
                 color: white;
                 background-color: inherit;
                 border: none;
@@ -76,7 +77,10 @@
                 display: inline-block;
                 font-family: inherit;
                 position: fixed;
-                margin: 14px 8px 8px 124px;
+            }
+
+            #btn-txt {
+                margin: 14px 8px 8px 128px;
                 /* top, right, bottom, left*/
             }
 
@@ -111,7 +115,7 @@
             button.zoom-out {
                 padding: 0px 0px 4px 0px;
                 position: fixed;
-                right: 256px; /*base: 8px*/
+                right: 340px; /*base: 8px*/
                 bottom: 12px; /*base: 4px*/
             }
 
@@ -119,7 +123,7 @@
                 padding: 2px 0px 0px 0px;
                 margin: 0px 8px 4px 0px;
                 position: fixed;
-                right: 172px;
+                right: 256px;
                 bottom: 8px;
             }
 
@@ -128,11 +132,20 @@
                 padding: 2px 0px 0px 0px;
                 margin: 0px 8px 4px 0px;
                 position: fixed;
-                right: 88px;
+                right: 174px;
                 bottom: 8px;
             }
 
             button.zoom-one {
+                font-size: 16px;
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 98px;
+                bottom: 8px;
+            }
+
+            button.page-size {
                 font-size: 16px;
                 padding: 2px 0px 0px 0px;
                 margin: 0px 8px 4px 0px;
@@ -146,14 +159,14 @@
                 border: 2px solid #333;
                 color: #333;
             }
-            
+
         </style>
     </head>
     <body>
         <div class="topnav">
-            <button class="btn-circle" onclick="{newCircle();}">circle</button>
-            <button class="btn-rect" onclick="{newRect();}">rect</button>
-            <button class="btn-size" onclick="{onSize();}">Size</button>
+            <button class="notext circle" id="btn-circle" onclick="{onCircle();}">circle</button>
+            <button class="notext rect" id="btn-rect" onclick="{onRect();}">rect</button>
+            <button class="solid" id="btn-txt" onclick="{onText();}">text</button>
         </div>
 
         <canvas id="canvas"></canvas>
@@ -163,6 +176,7 @@
             <button class="btn-zoom zoom-in" onclick="{zoonIn();}">+</button>
             <button class="btn-zoom zoom-reset" onclick="{zoomReset();}">RST</button>
             <button class="btn-zoom zoom-one" onclick="{zoomOne();}">1</button>
+            <button class="btn-zoom page-size" onclick="{onResize();}">P</button>
         </div>
         
             <script>
@@ -246,26 +260,43 @@
                     });
                 }
 
-                const newCircle = () => {
-                    const circle = new fabric.Circle();
-                    circle.set({ radius: 50, fill: 'darkRed', opacity: 0.7 });
-                    circle.set('selectable', true);
-                    canvas.add(circle);
-                }
-
-                const newRect = () => {
-                    const rect = new fabric.Rect();
-                    rect.set({ width: 100, height: 100, fill: 'darkGreen', opacity: 0.7 });
-                    rect.set('selectable', true);
-                    canvas.add(rect);
-                }
-
                 const init = () => {
                     setViewport(bannerWidth, bannerHeight);
                     loadImage();
                 }
 
-                const onSize = () => {
+                const square = () => {
+                    const minLeft = window.innerWidth * .08;
+                    return minLeft / canvas.getZoom();
+                }
+
+                const onCircle = () => {
+                    const circle = new fabric.Circle();
+                    circle.set({ radius: square() / 2, fill: 'darkRed', opacity: 0.7 });
+                    circle.set('selectable', true);
+                    canvas.add(circle);
+                }
+
+                const onRect = () => {
+                    const rect = new fabric.Rect();
+                    rect.set({ width: square(), height: square(), fill: 'darkGreen', opacity: 0.7 });
+                    rect.set('selectable', true);
+                    canvas.add(rect);
+                }
+
+                const onText = () => {
+                    const text = new fabric.IText('Text', {
+                        left: 0,
+                        top: 0,
+                        fontFamily: 'arial black',
+                        fill: '#333',
+                        fontSize: 10,
+
+                    });
+                    canvas.add(text);
+                }
+
+                const onResize = () => {
                     let wInch = prompt("Width by Inch:", '');
                     let hInch = prompt("Height by Inch:", '');
 
