@@ -76,12 +76,14 @@
                 text-align: center;
                 text-decoration: none;
                 display: inline-block;
-                font-family: inherit;
+                font-family:Arial, Helvetica, sans-serif;
                 position: fixed;
             }
 
             #btn-txt {
-                margin: 14px 8px 8px 128px;
+                padding-left: 12px;
+                padding-right: 12px;
+                margin: 16px 0px 8px 128px;
                 /* top, right, bottom, left*/
             }
 
@@ -107,8 +109,8 @@
                 text-decoration: none;
                 background-color: #333;
                 transition-duration: 0.14s;
-                font-family: inherit; /* Important for vertical align on mobile phones */
-                margin: 0px; /* Important for vertical align on mobile phones */
+                font-family: inherit;
+                margin: 0px;
                 width: 64px;
                 height: 64px;
             }
@@ -116,8 +118,10 @@
             button.zoom-out {
                 padding: 0px 0px 4px 0px;
                 position: fixed;
-                right: 340px; /*base: 8px*/
-                bottom: 12px; /*base: 4px*/
+                right: 340px; 
+                bottom: 12px; 
+                /*base right: 8px*/
+                /*base bottom: 4px*/
             }
 
             button.zoom-in {
@@ -164,7 +168,13 @@
             #font-selector {
                 position: fixed;
                 margin-top: 16px;
-                margin-left: 190px;
+                margin-left: 184px;
+            }
+
+            #color-selector {
+                position: fixed;
+                margin-top: 16px;
+                margin-left: 310px;
             }
 
         </style>
@@ -172,9 +182,17 @@
     <body>
         <div class="topnav">
             <button class="notext circle" id="btn-circle" onclick="{onCircle();}">circle</button>
+
             <button class="notext rect" id="btn-rect" onclick="{onRect();}">rect</button>
-            <button class="solid" id="btn-txt" onclick="{onText();}">text</button>
-            <select id='font-selector' onChange="return fontChange();"></select>
+
+            <button class="solid" id="btn-txt" onclick="{onText();}">Aa</button>
+
+            <select id="font-selector" onChange="return fontChange();"></select>
+
+            <span id="color-selector">
+                <input type="color" id="colorWell" value="#000000">
+                <label for="colorWell"></label>
+            </span>
         </div>
 
         <canvas id="canvas"></canvas>
@@ -304,7 +322,7 @@
                         left: 0,
                         top: 0,
                         fontFamily: font,
-                        fill: '#333',
+                        fill: color,
                         fontSize: 10,
 
                     });
@@ -381,54 +399,61 @@
                     })(document);
                 }
 
-                const currentFont = (font) => {
+                const currentFont = (fnt) => {
                     for (let i = 0; i < fonts.length; i++) {
-                        if (fonts[i] == font) {
+                        if (fonts[i] == fnt) {
                             document.getElementById("font-selector").selectedIndex = i;
                         }
                     }
                 }
 
+                const currentColor = (clr) => {
+                    document.getElementById("colorWell").value = clr;
+                }
+
                 canvas.on("selection:created", (eventObject) => {
-                    if (canvas.getActiveObject().type == "i-text") {
-                        currentFont(canvas.getActiveObject().fontFamily);
+                    const element = canvas.getActiveObject();
+
+                    if (element.type == "i-text") {
+                        currentFont(element.fontFamily);
+                        currentColor(element.fill);
                     }
                 });
 
                 canvas.on("selection:updated", (eventObject) => {
-                    if (canvas.getActiveObject().type == "i-text") {
-                        currentFont(canvas.getActiveObject().fontFamily);
+                    const element = canvas.getActiveObject();
+
+                    if (element.type == "i-text") {
+                        currentFont(element.fontFamily);
+                        currentColor(element.fill);
                     }
                 });
 
-                // canvas.on("before:selection:cleared", (eventObject) => {
-                //     if (canvas.getActiveObject().type == "i-text") {
-                //         currentFont(canvas.getActiveObject().fontFamily);
-                //     }
-                // });
+                const defaultColor = "#000000";
+                let color = defaultColor;
 
-                const colors = ["black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki", "darkmagenta", "darkolivegreen", "darkorange"];
-
-                const initColors = () => {
-                    const select = document.getElementById("color-selector");
-
-                    for (let a = 0; a < colors.length; a++) {
-                        const opt = document.createElement('option');
-                        opt.value = opt.innerHTML = colors[a];
-                        opt.style.fontFamily = colors[a];
-                        select.add(opt);
+                const changeCanvasActiveColor = () => {
+                    const getObj = canvas.getActiveObject() ? canvas.getActiveObject() : 'null';
+                    if (getObj !== 'null') {
+                        getObj.set("fill", color);
+                        canvas.requestRenderAll();
                     }
                 }
 
-                //initColors();
+                function updateFirst(event) {
+                    color = event.target.value;
 
-                const colorChange = () => {
-                    const x = document.getElementById("color-selector").selectedIndex;
-                    const v = colors[x]
-
-                    console.log(v);
+                    changeCanvasActiveColor();
                 }
 
+                function startup() {
+                    colorWell = document.querySelector("#colorWell");
+                    colorWell.value = defaultColor;
+                    colorWell.addEventListener("input", updateFirst, false);
+                    colorWell.select();
+                }
+
+                window.addEventListener("load", startup, false);
 
                 const onResize = () => {
                     let wInch = prompt("Width by Inch:", '');
