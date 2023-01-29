@@ -302,14 +302,14 @@
 
                 const onCircle = () => {
                     const circle = new fabric.Circle();
-                    circle.set({ radius: square() / 2, fill: 'darkRed', opacity: 0.7 });
+                    circle.set({ radius: square() / 2, fill: color, opacity: 0.7 });
                     circle.set('selectable', true);
                     canvas.add(circle);
                 }
 
                 const onRect = () => {
                     const rect = new fabric.Rect();
-                    rect.set({ width: square(), height: square(), fill: 'darkGreen', opacity: 0.7 });
+                    rect.set({ width: square(), height: square(), fill: color, opacity: 0.7 });
                     rect.set('selectable', true);
                     canvas.add(rect);
                 }
@@ -418,6 +418,10 @@
                         currentFont(element.fontFamily);
                         currentColor(element.fill);
                     }
+
+                    if (element.type == "rect" || element.type == "circle") {
+                        currentColor(element.fill);
+                    }
                 });
 
                 canvas.on("selection:updated", (eventObject) => {
@@ -425,6 +429,10 @@
 
                     if (element.type == "i-text") {
                         currentFont(element.fontFamily);
+                        currentColor(element.fill);
+                    }
+
+                    if (element.type == "rect" || element.type == "circle") {
                         currentColor(element.fill);
                     }
                 });
