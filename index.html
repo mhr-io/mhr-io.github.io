@@ -1,713 +1,726 @@
 <!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>canvas move</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="./fabric_with_gestures.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+        <style>
+            body {
+                background-color: rgb(230, 230, 230);
+                margin: 0px;
+            }
 
-<head>
-    <meta charset="utf-8">
-    <title>canvas move</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="./fabric_with_gestures.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
-    
-    <style>
-        body {
-            background-color: rgb(230, 230, 230);
-            margin: 0px;
-        }
+            .canvas-container {
+                margin-top: 60px;
+                position: relative;
+            }
 
-        .canvas-container {
-            margin-top: 60px;
-            position: relative;
-        }
+            #canvas {
+                top: 60px;
+                position: absolute;
+            }
 
-        #canvas {
-            top: 60px;
-            position: absolute;
-        }
+            .topnav {
+                background-color: rgb(51, 51, 51);
+                overflow: hidden;
+                position: fixed;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 60px;
+            }
 
-        .topnav {
-            background-color: rgb(51, 51, 51);
-            overflow: hidden;
-            position: fixed;
-            top: 0px;
-            left: 0px;
-            width: 100%;
-            height: 60px;
-        }
+            .topnav button:active {
+                background-color: inheritdd;
+                border: 2px solid rgb(51, 51, 51);
+            }
 
-        .topnav button:active {
-            background-color: inheritdd;
-            border: 2px solid rgb(51, 51, 51);
-        }
+            .notext {
+                font-size: 0px;
+                border: 2px solid white;
+                outline: none;
+                color: white;
+                padding: 20px;
+                transition-duration: 0.14s;
+                font-family: inherit;
+                position: fixed;
+            }
 
-        .notext {
-            font-size: 0px;
-            border: 2px solid white;
-            outline: none;
-            color: white;
-            padding: 20px;
-            transition-duration: 0.14s;
-            font-family: inherit;
-            position: fixed;
-        }
+            .circle {
+                border-radius: 50%;
+            }
 
-        .circle {
-            border-radius: 50%;
-        }
+            .rect {
+                border-radius: 2px;
+            }
 
-        .rect {
-            border-radius: 2px;
-        }
+            #btn-circle {
+                background-color: darkred;
+                margin: 8px 4px 8px 16px;
+                /* top, right, bottom, left*/
+            }
 
-        #btn-circle {
-            background-color: darkred;
-            margin: 8px 4px 8px 16px;
-            /* top, right, bottom, left*/
-        }
+            #btn-rect {
+                background-color: darkgreen;
+                margin: 8px 0px 8px 74px;
+                /* top, right, bottom, left*/
+            }
 
-        #btn-rect {
-            background-color: darkgreen;
-            margin: 8px 0px 8px 74px;
-            /* top, right, bottom, left*/
-        }
+            .solid {
+                font-size: 16px;
+                color: white;
+                background-color: inherit;
+                border: none;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-family: inherit;
+                position: fixed;
+            }
 
-        .solid {
-            font-size: 16px;
-            color: white;
-            background-color: inherit;
-            border: none;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-family: inherit;
-            position: fixed;
-        }
+            #btn-txt {
+                margin: 14px 8px 8px 128px;
+                /* top, right, bottom, left*/
+            }
 
-        #btn-txt {
-            margin: 14px 8px 8px 128px;
-            /* top, right, bottom, left*/
-        }
+            .navbar {
+                background-color: inherit;
+                overflow: hidden;
+                position: fixed;
+                bottom: 0px;
+                right: 0;
+                width: max-content;
+                height: 58px;
+            }
 
-        .navbar {
-            background-color: inherit;
-            overflow: hidden;
-            position: fixed;
-            bottom: 0px;
-            right: 0;
-            width: max-content;
-            height: 58px;
-        }
+            button.btn-zoom {
+                font-size: 32px;
+                font-weight: bold;
+                border: 2px solid white;
+                border-radius: 50%;
+                outline: none;
+                color: white;
+                padding: 0px;
+                text-align: center;
+                text-decoration: none;
+                background-color: #333;
+                transition-duration: 0.14s;
+                font-family: inherit; /* Important for vertical align on mobile phones */
+                margin: 0px; /* Important for vertical align on mobile phones */
+                width: 64px;
+                height: 64px;
+            }
 
-        button.btn-zoom {
-            font-size: 32px;
-            font-weight: bold;
-            border: 2px solid white;
-            border-radius: 50%;
-            outline: none;
-            color: white;
-            padding: 0px;
-            text-align: center;
-            text-decoration: none;
-            background-color: #333;
-            transition-duration: 0.14s;
-            font-family: inherit;
-            /* Important for vertical align on mobile phones */
-            margin: 0px;
-            /* Important for vertical align on mobile phones */
-            width: 64px;
-            height: 64px;
-        }
+            button.zoom-out {
+                padding: 0px 0px 4px 0px;
+                position: fixed;
+                right: 340px; /*base: 8px*/
+                bottom: 12px; /*base: 4px*/
+            }
 
-        button.zoom-out {
-            padding: 0px 0px 4px 0px;
-            position: fixed;
-            right: 340px;
-            /*base: 8px*/
-            bottom: 12px;
-            /*base: 4px*/
-        }
+            button.zoom-in {
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 256px;
+                bottom: 8px;
+            }
 
-        button.zoom-in {
-            padding: 2px 0px 0px 0px;
-            margin: 0px 8px 4px 0px;
-            position: fixed;
-            right: 256px;
-            bottom: 8px;
-        }
+            button.zoom-reset {
+                font-size: 16px;
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 174px;
+                bottom: 8px;
+            }
 
-        button.zoom-reset {
-            font-size: 16px;
-            padding: 2px 0px 0px 0px;
-            margin: 0px 8px 4px 0px;
-            position: fixed;
-            right: 174px;
-            bottom: 8px;
-        }
+            button.zoom-one {
+                font-size: 16px;
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 98px;
+                bottom: 8px;
+            }
 
-        button.zoom-one {
-            font-size: 16px;
-            padding: 2px 0px 0px 0px;
-            margin: 0px 8px 4px 0px;
-            position: fixed;
-            right: 98px;
-            bottom: 8px;
-        }
+            button.page-size {
+                font-size: 16px;
+                padding: 2px 0px 0px 0px;
+                margin: 0px 8px 4px 0px;
+                position: fixed;
+                right: 16px;
+                bottom: 8px;
+            }
 
-        button.page-size {
-            font-size: 16px;
-            padding: 2px 0px 0px 0px;
-            margin: 0px 8px 4px 0px;
-            position: fixed;
-            right: 16px;
-            bottom: 8px;
-        }
+            .navbar button:active {
+                background-color: white;
+                border: 2px solid #333;
+                color: #333;
+            }
 
-        .navbar button:active {
-            background-color: white;
-            border: 2px solid #333;
-            color: #333;
-        }
+            #font-selector {
+                position: fixed;
+                margin-top: 16px;
+                margin-left: 190px;
+            }
 
-        #font-selector {
-            position: fixed;
-            margin-top: 16px;
-            margin-left: 190px;
-        }
+        </style>
+    </head>
+    <body>
+        <div class="topnav">
+            <button class="notext circle" id="btn-circle" onclick="{onCircle();}">circle</button>
+            <button class="notext rect" id="btn-rect" onclick="{onRect();}">rect</button>
+            <button class="solid" id="btn-txt" onclick="{onText();}">text</button>
+            <select id='font-selector' onChange="return fontChange();"></select>
+        </div>
 
-        #color-selector {
-            position: fixed;
-            margin-top: 16px;
-            margin-left: 320px;
-        }
+        <canvas id="canvas"></canvas>
 
-    </style>
-</head>
-
-<body>
-    <div class="topnav">
-        <button class="notext circle" id="btn-circle" onclick="{onCircle();}">circle</button>
-        <button class="notext rect" id="btn-rect" onclick="{onRect();}">rect</button>
-        <button class="solid" id="btn-txt" onclick="{onText();}">text</button>
-        <select id='font-selector' onChange="return fontChange();">
-        </select>
-        <!-- <select id='color-selector' onChange="return colorChange();">
-        </select> -->
-    </div>
-
-    <canvas id="canvas"></canvas>
-
-    <div class="navbar">
-        <button class="btn-zoom zoom-out" onclick="{zoomOut();}">-</button>
-        <button class="btn-zoom zoom-in" onclick="{zoonIn();}">+</button>
-        <button class="btn-zoom zoom-reset" onclick="{zoomReset();}">RST</button>
-        <button class="btn-zoom zoom-one" onclick="{zoomOne();}">1</button>
-        <button class="btn-zoom page-size" onclick="{onResize();}">P</button>
-    </div>
-
-    <script>
-        const showMessage = (message, element) => {
-            const paragraph = document.getElementById("element");
-
-            const text = document.createTextNode(message);
-            const br = document.createElement('br');
-
-            paragraph.appendChild(text);
-            paragraph.appendChild(br);
-
-            console.log(message);
-        }
-
-        const canvas = new fabric.Canvas("canvas");
-        canvas.setWidth(window.innerWidth);
-        canvas.setHeight(window.innerHeight);
-        canvas.backgroundColor = "white";
-        canvas.selection = false;
-
-        let ppi = 72;
-        let bannerWidth = 1;
-        let bannerHeight = 1;
-
-        const calViewportSize = (inchWidth, inchHeight) => {
-            ppi = Math.min(window.innerWidth, window.innerHeight) / Math.max(inchWidth, inchHeight);
-
-            const pixelWidth = inchWidth * 72;
-            const pixelHeight = inchHeight * 72;
-
-            const size = [pixelWidth, pixelHeight];
-
-            return size;
-        }
-
-        let maxZoom = 1;
-        let zoomLimit = 1;
-
-        const setViewport = (inchWidth, inchHeight) => {
-            const size = calViewportSize(inchWidth, inchHeight);
-
-            const clipPath = new fabric.Rect({
-                width: size[0],
-                height: size[1],
-            });
-            canvas.clipPath = clipPath;
-
-            const scale = ppi / 72;
-
-            zoomLimit = scale * .898;
-
-            canvas.setZoom(zoomLimit);
-
-            maxZoom = zoomLimit * 4;
-        }
-
-        let imgScale = 1;
-
-        const loadImage = () => {
-            const damavandImg = "https://volcano.si.edu/gallery/photos/GVP-11995.jpg";
-            const monkeyImg = "./monkey.jpeg";
-
-            fabric.util.loadImage(damavandImg, {}).then(function (imgObj) {
-                const inchWidth = imgObj.width / 72;
-                const inchHeight = imgObj.height / 72;
-
-                const sc = 1 / Math.max(inchWidth / bannerWidth, inchHeight / bannerHeight);
-
-                imgScale = sc;
-
-                const image = new fabric.Image(imgObj, {
-                    scaleX: sc,
-                    scaleY: sc,
-                    selectable: false,
-                });
-
-                canvas.add(image);
-
-                canvas.renderAll();
-            });
-        }
-
-        const init = () => {
-            setViewport(bannerWidth, bannerHeight);
-            loadImage();
-        }
-
-        const square = () => {
-            const minLeft = window.innerWidth * .08;
-            return minLeft / canvas.getZoom();
-        }
-
-        const onCircle = () => {
-            const circle = new fabric.Circle();
-            circle.set({ radius: square() / 2, fill: 'darkRed', opacity: 0.7 });
-            circle.set('selectable', true);
-            canvas.add(circle);
-        }
-
-        const onRect = () => {
-            const rect = new fabric.Rect();
-            rect.set({ width: square(), height: square(), fill: 'darkGreen', opacity: 0.7 });
-            rect.set('selectable', true);
-            canvas.add(rect);
-        }
-
-        const fonts = ["Arial Black", "Montez", "Lobster", "Pacifico", "Rokkitt", "Righteous", "Bangers", "Chewy", "Cinzel", "Courgette"];
-        let font = fonts[0];
-
-        const onText = () => {
-            const text = new fabric.IText('Text', {
-                left: 0,
-                top: 0,
-                fontFamily: font,
-                fill: '#333',
-                fontSize: 10,
-
-            });
-            canvas.add(text);
-        }
-
+        <div class="navbar">
+            <button class="btn-zoom zoom-out" onclick="{zoomOut();}">-</button>
+            <button class="btn-zoom zoom-in" onclick="{zoonIn();}">+</button>
+            <button class="btn-zoom zoom-reset" onclick="{zoomReset();}">RST</button>
+            <button class="btn-zoom zoom-one" onclick="{zoomOne();}">1</button>
+            <button class="btn-zoom page-size" onclick="{onResize();}">P</button>
+        </div>
         
-        const initFonts = () => {
-            const select = document.getElementById("font-selector");
-
-            for (let a = 0; a < fonts.length; a++) {
-                const opt = document.createElement('option');
-                opt.value = opt.innerHTML = fonts[a];
-                opt.style.fontFamily = fonts[a];
-                select.add(opt);
-            }
-
-            select.selectedIndex = 0;
-        }
-
-        initFonts();
-
-        const changeCanvasActiveFont = () => {
-            const getObj = canvas.getActiveObject() ? canvas.getActiveObject() : 'null';
-            if (getObj !== 'null') {
-                getObj.set("fontFamily", font);
-                canvas.requestRenderAll();
-            }
-        }
-
-        const fontChange = () => {
-            const x = document.getElementById("font-selector").selectedIndex;
-
-            if (x > 0) {
-                WebFont.load({
-                    google: {
-                        families: [fonts[x]]
-                    },
-                    active: () => {
-                        font = fonts[x];
-                        changeCanvasActiveFont();
-                    },
-                });
-            }
-
-            if (x == 0) {
-                font = fonts[0];
-                changeCanvasActiveFont();
-            }
-        }
-
-        const asyncFontChange = () => {
-                const x = document.getElementById("font-selector").selectedIndex;
-
-                WebFontConfig = {
-                    google: {
-                        families: [fonts[x]]
-                    },
-                    loading: function () {
-                        console.log("loading");
-                    },
-                    active: () => {
-                        console.log("active");
-                    },
-                    inactive: function () {
-                        console.log("inactive");
-                    },
-                };
-
-                (function (d) {
-                    var wf = d.createElement('script'), s = d.scripts[0];
-                    wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
-                    wf.async = true;
-                    s.parentNode.insertBefore(wf, s);
-                })(document);
-            }
-
-        const colors = ["black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki", "darkmagenta", "darkolivegreen", "darkorange"];
-
-        const initColors = () => {
-            const select = document.getElementById("color-selector");
-
-            for (let a = 0; a < colors.length; a++) {
-                const opt = document.createElement('option');
-                opt.value = opt.innerHTML = colors[a];
-                opt.style.fontFamily = colors[a];
-                select.add(opt);
-            }
-        }
-
-        //initColors();
-
-        const colorChange = () => {
-            const x = document.getElementById("color-selector").selectedIndex;
-            const v = colors[x]
-
-            console.log(v);
-        }
-
-        const onResize = () => {
-            let wInch = prompt("Width by Inch:", '');
-            let hInch = prompt("Height by Inch:", '');
-
-            let result = confirm(`Width: ${wInch ? wInch : 1} inch , Height: ${hInch ? hInch : 1} inch. Is it OK?`);
-
-            if (result) {
-                bannerWidth = wInch ? wInch : 1;
-                bannerHeight = hInch ? hInch : 1;
-
-                init();
-            }
-        }
-
-        const pan = (startX,
-            startY,
-            changeX,
-            changeY,
-            startLeft,
-            startTop,
-            startScale,
-            changeScale,
-            viewportWidth,
-            viewportHeight) => {
-            const startWidth = viewportWidth * startScale;
-            const startHeight = viewportHeight * startScale;
-
-            const scWidth = viewportWidth * changeScale;
-            const scHeight = viewportHeight * changeScale;
-
-            const cx = startX;
-            const cy = startY;
-            const CX = changeX;
-            const CY = changeY;
-
-            const cxPercent = cx / startWidth;
-            const cyPercent = cy / startHeight;
-
-            const CXPercent = CX / scWidth;
-            const CYPercent = CY / scHeight;
-
-            const xDiffPercent = CXPercent - cxPercent;
-            const yDiffPercent = CYPercent - cyPercent;
-
-            const leftPercent = startLeft / startWidth;
-            const topPercent = startTop / startHeight;
-
-            const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
-            const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
-
-            const vpT = canvas.viewportTransform;
-
-            if (changeScale !== startScale) {
-                vpT[0] = changeScale;
-                vpT[3] = changeScale;
-            }
-
-            const minLeft = window.innerWidth * .08;
-            const minRight = window.innerWidth * .14;
-            const minTop = window.innerHeight * .04;
-            const minBottom = window.innerHeight * .14;
-
-            let left = 0;
-            let top = 0;
-
-            if (xDiffPixel < 1) {
-                left = scWidth + xDiffPixel > minLeft ? xDiffPixel : minLeft - scWidth;
-            }
-
-            if (xDiffPixel > 1) {
-                left = window.innerWidth - xDiffPixel > minRight ? xDiffPixel : window.innerWidth - minRight;
-            }
-
-            if (yDiffPixel < 1) {
-                top = scHeight + yDiffPixel > minTop ? yDiffPixel : minTop - scHeight;
-            }
-
-            if (yDiffPixel > 1) {
-                top = window.innerHeight - yDiffPixel > minBottom ? yDiffPixel : window.innerHeight - minBottom;
-            }
-
-            vpT[4] = left;
-            vpT[5] = top;
-
-            canvas.requestRenderAll();
-        }
-
-        const zoonIn = () => {
-            if (canvas.getZoom() < maxZoom) {
-                const vpt = canvas.viewportTransform;
-
-                const vptPoint = new fabric.Point(vpt[4], vpt[5]);
-
-                canvas.zoomToPoint(vptPoint, canvas.getZoom() * 1.1);
-            }
-        }
-
-        const zoomOut = () => {
-            if (canvas.getZoom() > 0.1) {
-                const vpt = canvas.viewportTransform;
-
-                const vptPoint = new fabric.Point(vpt[4], vpt[5]);
-
-                canvas.zoomToPoint(vptPoint, canvas.getZoom() / 1.1);
-            }
-        }
-
-        const zoomReset = () => {
-            canvas.setZoom(zoomLimit);
-
-            const vpt = canvas.viewportTransform;
-            vpt[4] = 0;
-            vpt[5] = 0;
-            canvas.requestRenderAll();
-        }
-
-        const zoomOne = () => {
-            canvas.setZoom(1);
-
-            const vpt = canvas.viewportTransform;
-            vpt[4] = 0;
-            vpt[5] = 0;
-            canvas.requestRenderAll();
-        }
-
-        let isDragging = false;
-        let lastPosX = 0;
-        let lastPosY = 0;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        const mousedown = (options) => {
-            const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
-            if (getObj == 'null') {
-                const e = options.e;
-
-                const pointX = e.clientX ? e.clientX : undefined;
-                const pointY = e.clientY ? e.clientY : undefined;
-
-                if (pointX !== undefined && pointY !== undefined) {
-                    isDragging = true;
-
-                    lastPosX = pointX;
-                    lastPosY = pointY;
-
-                    const vpt = canvas.viewportTransform;
-                    offsetX = vpt[4];
-                    offsetY = vpt[5];
-                }
-            }
-        };
-
-        const mousemove = (options) => {
-            if (isDragging) {
-                pan(lastPosX, lastPosY, options.e.clientX, options.e.clientY,
-                    offsetX, offsetY,
-                    canvas.getZoom(), canvas.getZoom(),
-                    canvas.clipPath.width, canvas.clipPath.height);
-            }
-        };
-
-        let isGesture = false;
-
-        const mouseup = () => {
-            canvas.setViewportTransform(canvas.viewportTransform);
-            isDragging = false;
-            isGesture = false;
-        };
-
-        canvas.on("mouse:down", (options) => {
-            mousedown(options);
-
-        });
-
-        canvas.on("mouse:move", (options) => {
-            mousemove(options);
-            lastDif = -1;
-        });
-
-        canvas.on("mouse:up", (options) => {
-            mouseup();
-        });
-
-        let dragStartX1 = 0;
-        let dragStartY1 = 0;
-        let dragStartX2 = 0;
-        let dragStartY2 = 0;
-        let startZoom = 1;
-
-        canvas.on("touch:gesture", (options) => {
-            const touch = options.e.touches;
-            const state = options.self.state;
-
-            if (touch && touch.length == 2) {
-                if (state == 'start') {
-                    dragStartX1 = touch[0].clientX;
-                    dragStartY1 = touch[0].clientY;
-                    dragStartX2 = touch[1].clientX;
-                    dragStartY2 = touch[1].clientY;
-
-                    const vpt = canvas.viewportTransform;
-                    offsetX = vpt[4];
-                    offsetY = vpt[5];
-
-                    startZoom = canvas.getZoom();
+            <script>
+                const showMessage = (message, element) => {
+                    const paragraph = document.getElementById("element");
+
+                    const text = document.createTextNode(message);
+                    const br = document.createElement('br');
+                    
+                    paragraph.appendChild(text);
+                    paragraph.appendChild(br);
+
+                    console.log(message);
                 }
 
-                if (state == 'change') {
-                    const [x1, y1] = [dragStartX1, dragStartY1];
-                    const [x2, y2] = [dragStartX2, dragStartY2];
-                    const [X1, Y1] = [touch[0].clientX, touch[0].clientY];
-                    const [X2, Y2] = [touch[1].clientX, touch[1].clientY];
-
-                    const m = (y2 - y1) / (x2 - x1);
-                    const t = Math.atan(m);
-
-                    const M = (Y2 - Y1) / (X2 - X1);
-                    const T = Math.atan(M);
-
-                    const teta = T - t;
-                    const d1 = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
-                    const D2 = Math.sqrt(Math.pow((X2 - X1), 2) + Math.pow((Y2 - Y1), 2));
-                    const d2 = Math.abs(D2 * Math.cos(teta));
-                    const sc = d2 / d1;
-                    const scale = Math.min(Math.max(.1, sc * startZoom), maxZoom);
-
-                    const cx = .5 * (x1 + x2);
-                    const cy = .5 * (y1 + y2);
-                    const CX = .5 * (X1 + X2);
-                    const CY = .5 * (Y1 + Y2);
-
-                    pan(cx, cy, CX, CY,
-                        offsetX, offsetY,
-                        startZoom, scale,
-                        canvas.clipPath.width, canvas.clipPath.height);
+                const canvas = new fabric.Canvas("canvas");
+                const initCanvas = () => {
+                    canvas.setWidth(window.innerWidth);
+                    canvas.setHeight(window.innerHeight);
+                    canvas.backgroundColor = "white";
+                    canvas.selection = false;
                 }
-            }
-        });
 
-        let startMoveX = 0;
-        let startMoveY = 0;
+                initCanvas();
 
-        canvas.on("touch:drag", (options) => {
-            const touch = options.e.touches;
-            const state = options.self.state;
+                let ppi = 72;
+                let bannerWidth = 1;
+                let bannerHeight = 1;
 
-            if (touch && touch.length == 2) {
-                isGesture = true;
-            }
+                const calViewportSize = (inchWidth, inchHeight) => {
+                    ppi = Math.min(window.innerWidth, window.innerHeight) / Math.max(inchWidth, inchHeight);
 
-            if (touch && touch.length == 1) {
-                const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
+                    const pixelWidth = inchWidth * 72;
+                    const pixelHeight = inchHeight * 72;
 
-                if (getObj == 'null') {
-                    if (state == 'down') {
-                        startMoveX = touch[0].clientX;
-                        startMoveY = touch[0].clientY;
+                    const size = [pixelWidth, pixelHeight];
 
-                        const vpt = canvas.viewportTransform;
-                        offsetX = vpt[4];
-                        offsetY = vpt[5];
+                    return size;
+                }
+
+                let maxZoom = 1;
+                let zoomLimit = 1;
+
+                const setViewport = (inchWidth, inchHeight) => {
+                    const size = calViewportSize(inchWidth, inchHeight);
+
+                    const clipPath = new fabric.Rect({
+                        width: size[0],
+                        height: size[1],
+                    });
+                    canvas.clipPath = clipPath;
+
+                    const scale = ppi / 72;
+
+                    zoomLimit = scale * .898;
+
+                    canvas.setZoom(zoomLimit);
+
+                    maxZoom = zoomLimit * 4;
+                }
+
+                let imgScale = 1;
+                
+                const loadImage = () => {
+                    const damavandImg = "https://volcano.si.edu/gallery/photos/GVP-11995.jpg";
+                    const monkeyImg = "./monkey.jpeg";
+
+                    fabric.util.loadImage(damavandImg, {}).then(function (imgObj) {
+                        const inchWidth = imgObj.width / 72;
+                        const inchHeight = imgObj.height / 72;
+
+                        const sc = 1 / Math.max(inchWidth / bannerWidth, inchHeight / bannerHeight);
+
+                        imgScale = sc;
+                        
+                        const image = new fabric.Image(imgObj, {
+                            scaleX: sc,
+                            scaleY: sc,
+                            selectable: false,
+                        });
+
+                        canvas.add(image);
+
+                        canvas.renderAll();
+                    });
+                }
+
+                const init = () => {
+                    setViewport(bannerWidth, bannerHeight);
+                    loadImage();
+                }
+
+                const square = () => {
+                    const minLeft = window.innerWidth * .08;
+                    return minLeft / canvas.getZoom();
+                }
+
+                const onCircle = () => {
+                    const circle = new fabric.Circle();
+                    circle.set({ radius: square() / 2, fill: 'darkRed', opacity: 0.7 });
+                    circle.set('selectable', true);
+                    canvas.add(circle);
+                }
+
+                const onRect = () => {
+                    const rect = new fabric.Rect();
+                    rect.set({ width: square(), height: square(), fill: 'darkGreen', opacity: 0.7 });
+                    rect.set('selectable', true);
+                    canvas.add(rect);
+                }
+
+                const fonts = ["Arial Black", "Montez", "Lobster", "Pacifico", "Rokkitt", "Righteous", "Bangers", "Chewy", "Cinzel", "Courgette"];
+                let font = fonts[0];
+
+                const onText = () => {
+                    const text = new fabric.IText('Text', {
+                        left: 0,
+                        top: 0,
+                        fontFamily: font,
+                        fill: '#333',
+                        fontSize: 10,
+
+                    });
+                    canvas.add(text);
+                }
+
+                const initFonts = () => {
+                    const select = document.getElementById("font-selector");
+
+                    for (let a = 0; a < fonts.length; a++) {
+                        const opt = document.createElement('option');
+                        opt.value = opt.innerHTML = fonts[a];
+                        opt.style.fontFamily = fonts[a];
+                        select.add(opt);
                     }
 
-                    if (state == 'move') {
-                        if (isGesture) {
-                            startMoveX = touch[0].clientX;
-                            startMoveY = touch[0].clientY;
+                    select.selectedIndex = 0;
+                }
+
+                initFonts();
+
+                const changeCanvasActiveFont = () => {
+                    const getObj = canvas.getActiveObject() ? canvas.getActiveObject() : 'null';
+                    if (getObj !== 'null') {
+                        getObj.set("fontFamily", font);
+                        canvas.requestRenderAll();
+                    }
+                }
+
+                const fontChange = () => {
+                    const x = document.getElementById("font-selector").selectedIndex;
+
+                    if (x > 0) {
+                        WebFont.load({
+                            google: {
+                                families: [fonts[x]]
+                            },
+                            active: () => {
+                                font = fonts[x];
+                                changeCanvasActiveFont();
+                            },
+                        });
+                    }
+
+                    if (x == 0) {
+                        font = fonts[0];
+                        changeCanvasActiveFont();
+                    }
+                }
+
+                const asyncFontChange = () => {
+                    const x = document.getElementById("font-selector").selectedIndex;
+
+                    WebFontConfig = {
+                        google: {
+                            families: [fonts[x]]
+                        },
+                        loading: function () {
+                            console.log("loading");
+                        },
+                        active: () => {
+                            console.log("active");
+                        },
+                        inactive: function () {
+                            console.log("inactive");
+                        },
+                    };
+
+                    (function (d) {
+                        var wf = d.createElement('script'), s = d.scripts[0];
+                        wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+                        wf.async = true;
+                        s.parentNode.insertBefore(wf, s);
+                    })(document);
+                }
+
+                const currentFont = (font) => {
+                    for (let i = 0; i < fonts.length; i++) {
+                        if (fonts[i] == font) {
+                            document.getElementById("font-selector").selectedIndex = i;
+                        }
+                    }
+                }
+
+                canvas.on("selection:created", (eventObject) => {
+                    if (canvas.getActiveObject().type == "i-text") {
+                        currentFont(canvas.getActiveObject().fontFamily);
+                    }
+                });
+
+                canvas.on("selection:updated", (eventObject) => {
+                    if (canvas.getActiveObject().type == "i-text") {
+                        currentFont(canvas.getActiveObject().fontFamily);
+                    }
+                });
+
+                // canvas.on("before:selection:cleared", (eventObject) => {
+                //     if (canvas.getActiveObject().type == "i-text") {
+                //         currentFont(canvas.getActiveObject().fontFamily);
+                //     }
+                // });
+
+                const colors = ["black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki", "darkmagenta", "darkolivegreen", "darkorange"];
+
+                const initColors = () => {
+                    const select = document.getElementById("color-selector");
+
+                    for (let a = 0; a < colors.length; a++) {
+                        const opt = document.createElement('option');
+                        opt.value = opt.innerHTML = colors[a];
+                        opt.style.fontFamily = colors[a];
+                        select.add(opt);
+                    }
+                }
+
+                //initColors();
+
+                const colorChange = () => {
+                    const x = document.getElementById("color-selector").selectedIndex;
+                    const v = colors[x]
+
+                    console.log(v);
+                }
+
+
+                const onResize = () => {
+                    let wInch = prompt("Width by Inch:", '');
+                    let hInch = prompt("Height by Inch:", '');
+
+                    let result = confirm(`Width: ${wInch ? wInch : 1} inch , Height: ${hInch ? hInch : 1} inch. Is it OK?`);
+
+                    if (result) {
+                        bannerWidth = wInch ? wInch : 1;
+                        bannerHeight = hInch ? hInch : 1;
+                        
+                        init();
+                    }
+                }
+
+                const pan = (startX, 
+                            startY, 
+                            changeX, 
+                            changeY, 
+                            startLeft, 
+                            startTop, 
+                            startScale, 
+                            changeScale, 
+                            viewportWidth, 
+                            viewportHeight) => {
+                    const startWidth = viewportWidth * startScale;
+                    const startHeight = viewportHeight * startScale;
+
+                    const scWidth = viewportWidth * changeScale;
+                    const scHeight = viewportHeight * changeScale;
+
+                    const cx = startX;
+                    const cy = startY;
+                    const CX = changeX;
+                    const CY = changeY;
+
+                    const cxPercent = cx / startWidth;
+                    const cyPercent = cy / startHeight;
+
+                    const CXPercent = CX / scWidth;
+                    const CYPercent = CY / scHeight;
+
+                    const xDiffPercent = CXPercent - cxPercent;
+                    const yDiffPercent = CYPercent - cyPercent;
+
+                    const leftPercent = startLeft / startWidth;
+                    const topPercent = startTop / startHeight;
+
+                    const xDiffPixel = (xDiffPercent + leftPercent) * scWidth;
+                    const yDiffPixel = (yDiffPercent + topPercent) * scHeight;
+
+                    const vpT = canvas.viewportTransform;
+
+                    if (changeScale !== startScale) {
+                        vpT[0] = changeScale;
+                        vpT[3] = changeScale;
+                    }
+
+                    const minLeft = window.innerWidth * .08;
+                    const minRight = window.innerWidth * .14;
+                    const minTop = window.innerHeight * .04;
+                    const minBottom = window.innerHeight * .14;
+
+                    let left = 0;
+                    let top = 0;
+
+                    if (xDiffPixel < 1) {
+                        left = scWidth + xDiffPixel > minLeft ? xDiffPixel : minLeft - scWidth;
+                    }
+
+                    if (xDiffPixel > 1) {
+                        left = window.innerWidth - xDiffPixel > minRight ? xDiffPixel : window.innerWidth - minRight;
+                    }
+
+                    if (yDiffPixel < 1) {
+                        top = scHeight + yDiffPixel > minTop ? yDiffPixel : minTop - scHeight;
+                    }
+
+                    if (yDiffPixel > 1) {
+                        top = window.innerHeight - yDiffPixel > minBottom ? yDiffPixel : window.innerHeight - minBottom;
+                    }
+
+                    vpT[4] = left;
+                    vpT[5] = top;
+
+                    canvas.requestRenderAll();
+                }
+
+                const zoonIn = () => {
+                    if (canvas.getZoom() < maxZoom) {
+                        const vpt = canvas.viewportTransform;
+                        
+                        const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+
+                        canvas.zoomToPoint(vptPoint, canvas.getZoom() * 1.1);
+                    }
+                }
+
+                const zoomOut = () => {
+                    if (canvas.getZoom() > 0.1) {
+                        const vpt = canvas.viewportTransform;
+
+                        const vptPoint = new fabric.Point(vpt[4], vpt[5]);
+
+                        canvas.zoomToPoint(vptPoint, canvas.getZoom() / 1.1);
+                    }
+                }
+
+                const zoomReset = () => {
+                    canvas.setZoom(zoomLimit);
+
+                    const vpt = canvas.viewportTransform;
+                    vpt[4] = 0;
+                    vpt[5] = 0;
+                    canvas.requestRenderAll();
+                }
+
+                const zoomOne = () => {
+                    canvas.setZoom(1);
+
+                    const vpt = canvas.viewportTransform;
+                    vpt[4] = 0;
+                    vpt[5] = 0;
+                    canvas.requestRenderAll();
+                }
+
+                let isDragging = false;
+                let lastPosX = 0;
+                let lastPosY = 0;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                const mousedown = (options) => {
+                    const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
+                    if (getObj == 'null') {
+                        const e = options.e;
+
+                        const pointX = e.clientX ? e.clientX : undefined;
+                        const pointY = e.clientY ? e.clientY : undefined;
+
+                        if (pointX !== undefined && pointY !== undefined) {
+                            isDragging = true;
+
+                            lastPosX = pointX;
+                            lastPosY = pointY;
 
                             const vpt = canvas.viewportTransform;
                             offsetX = vpt[4];
                             offsetY = vpt[5];
                         }
+                    }
+                };
 
-                        const cx = startMoveX;
-                        const cy = startMoveY;
-                        const CX = touch[0].clientX;
-                        const CY = touch[0].clientY;
-
-                        pan(cx, cy, CX, CY,
+                const mousemove = (options) => {
+                    if (isDragging) {
+                        pan(lastPosX, lastPosY, options.e.clientX, options.e.clientY,
                             offsetX, offsetY,
                             canvas.getZoom(), canvas.getZoom(),
                             canvas.clipPath.width, canvas.clipPath.height);
                     }
-                }
+                };
 
-                isGesture = false;
-            }
-        });
+                let isGesture = false;
 
-        init();
+                const mouseup = () => {
+                    canvas.setViewportTransform(canvas.viewportTransform);
+                    isDragging = false;
+                    isGesture = false;
+                };
 
-    </script>
-</body>
+                canvas.on("mouse:down", (options) => {
+                    mousedown(options);
+                    
+                });
 
+                canvas.on("mouse:move", (options) => {
+                    mousemove(options);
+                    lastDif = -1;
+                });
+
+                canvas.on("mouse:up", (options) => {
+                    mouseup();
+                });
+
+                let dragStartX1 = 0;
+                let dragStartY1 = 0;
+                let dragStartX2 = 0;
+                let dragStartY2 = 0;
+                let startZoom = 1;
+                
+                canvas.on("touch:gesture", (options) => {
+                    const touch = options.e.touches;
+                    const state = options.self.state;
+
+                    if (touch && touch.length == 2) {
+                        if (state == 'start') {
+                            dragStartX1 = touch[0].clientX;
+                            dragStartY1 = touch[0].clientY;
+                            dragStartX2 = touch[1].clientX;
+                            dragStartY2 = touch[1].clientY;
+
+                            const vpt = canvas.viewportTransform;
+                            offsetX = vpt[4];
+                            offsetY = vpt[5];
+
+                            startZoom = canvas.getZoom();
+                        }
+
+                        if (state  == 'change') {
+                            const [x1, y1] = [dragStartX1, dragStartY1];
+                            const [x2, y2] = [dragStartX2, dragStartY2];
+                            const [X1, Y1] = [touch[0].clientX, touch[0].clientY];
+                            const [X2, Y2] = [touch[1].clientX, touch[1].clientY];
+
+                            const m = (y2 - y1) / (x2 - x1);
+                            const t = Math.atan(m);
+
+                            const M = (Y2 - Y1) / (X2 - X1);
+                            const T = Math.atan(M);
+
+                            const teta = T - t;
+                            const d1 = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+                            const D2 = Math.sqrt(Math.pow((X2 - X1), 2) + Math.pow((Y2 - Y1), 2));
+                            const d2 = Math.abs(D2 * Math.cos(teta));
+                            const sc = d2 / d1;
+                            const scale = Math.min(Math.max(.1, sc * startZoom), maxZoom);
+
+                            const cx = .5 * (x1 + x2);
+                            const cy = .5 * (y1 + y2);
+                            const CX = .5 * (X1 + X2);
+                            const CY = .5 * (Y1 + Y2);
+
+                            pan(cx, cy, CX, CY, 
+                                offsetX, offsetY, 
+                                startZoom, scale, 
+                                canvas.clipPath.width, canvas.clipPath.height);
+                        }
+                    }
+                });
+
+                let startMoveX = 0;
+                let startMoveY = 0;
+                
+                canvas.on("touch:drag", (options) => {
+                    const touch = options.e.touches;
+                    const state = options.self.state;
+
+                    if (touch && touch.length == 2) {
+                        isGesture = true;
+                    }
+
+                    if (touch && touch.length == 1) {
+                        const getObj = canvas.getActiveObject() ? canvas.getActiveObject().type : 'null';
+
+                        if (getObj == 'null') {
+                            if (state == 'down') {
+                                startMoveX = touch[0].clientX;
+                                startMoveY = touch[0].clientY;
+
+                                const vpt = canvas.viewportTransform;
+                                offsetX = vpt[4];
+                                offsetY = vpt[5];
+                            }
+
+                            if (state == 'move') {
+                                if (isGesture) {
+                                    startMoveX = touch[0].clientX;
+                                    startMoveY = touch[0].clientY;
+
+                                    const vpt = canvas.viewportTransform;
+                                    offsetX = vpt[4];
+                                    offsetY = vpt[5];
+                                }
+
+                                const cx = startMoveX;
+                                const cy = startMoveY;
+                                const CX = touch[0].clientX;
+                                const CY = touch[0].clientY;
+
+                                pan(cx, cy, CX, CY, 
+                                    offsetX, offsetY, 
+                                    canvas.getZoom(), canvas.getZoom(), 
+                                    canvas.clipPath.width, canvas.clipPath.height);
+                            }
+                        }
+
+                        isGesture = false;
+                    }
+                });
+
+                init();
+
+            </script>        
+    </body>
 </html>
