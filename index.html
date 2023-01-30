@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="./fabric_with_gestures.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <style>
             body {
                 background-color: rgb(230, 230, 230);
@@ -83,7 +84,7 @@
             #btn-txt {
                 padding-left: 12px;
                 padding-right: 12px;
-                margin: 16px 0px 8px 128px;
+                margin: 16px 0px 8px 126px;
                 /* top, right, bottom, left*/
             }
 
@@ -168,14 +169,31 @@
             #font-selector {
                 position: fixed;
                 margin-top: 16px;
-                margin-left: 184px;
+                margin-left: 180px;
             }
 
             #color-selector {
                 position: fixed;
                 margin-top: 16px;
-                margin-left: 310px;
+                margin-left: 300px;
             }
+
+            .btn {
+                background-color: inherit; /* Blue background */
+                border: none; /* Remove borders */
+                color: white; /* White text */
+                padding: 12px 12px; /* Some padding */
+                font-size: 16px; /* Set a font size */
+                cursor: pointer; /* Mouse pointer on hover */
+                position: fixed;
+                margin-top: 4px;
+                margin-left: 354px;
+            }
+
+            /* .btn:hover {
+                background-color: inherit;
+                font-size: 20px;
+            } */
 
         </style>
     </head>
@@ -193,6 +211,8 @@
                 <input type="color" id="colorWell" value="#000000">
                 <label for="colorWell"></label>
             </span>
+
+            <button class="btn" onclick="{onDelete();}"><i class="fa fa-trash"></i></button>
         </div>
 
         <canvas id="canvas"></canvas>
@@ -325,8 +345,8 @@
                         fill: color,
                         fontSize: 10,
                         editable: false,
-
                     });
+
                     canvas.add(text);
                 }
 
@@ -477,6 +497,13 @@
                 }
 
                 window.addEventListener("load", startup, false);
+
+                const onDelete = () => {
+                    const getObj = canvas.getActiveObject() ? canvas.getActiveObject() : 'null';
+                    if (getObj !== 'null') {
+                        canvas.remove(getObj);
+                    }
+                }
 
                 const onResize = () => {
                     let wInch = prompt("Width by Inch:", '');
