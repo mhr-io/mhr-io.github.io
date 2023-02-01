@@ -246,7 +246,7 @@
             console.log(message);
         }
 
-        const canvas = new fabric.CanvasEx("canvas");
+        const canvas = new fabric.Canvas("canvas");
         const initCanvas = () => {
             canvas.setWidth(window.innerWidth);
             canvas.setHeight(window.innerHeight);
@@ -357,7 +357,7 @@
 
             canvas.add(text);
 
-            text.on('object:dblclick', function (options) {
+            text.on('mousedblclick', function (options) {
                 const str = prompt('Please Edit Your Text:', text.text);
 
                 alert(str);
@@ -367,11 +367,6 @@
                     canvas.requestRenderAll();
                 }
             });
-
-            // text.on('mousedown', function (options) {
-            //     console.log(options.e.which);
-            // });
-
         }
 
         const initFonts = () => {
