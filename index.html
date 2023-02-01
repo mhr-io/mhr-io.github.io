@@ -120,7 +120,7 @@
         button.zoom-out {
             padding: 0px 0px 4px 0px;
             position: fixed;
-            right: 340px;
+            right: 312px;
             bottom: 12px;
             /*base right: 8px*/
             /*base bottom: 4px*/
@@ -130,7 +130,7 @@
             padding: 2px 0px 0px 0px;
             margin: 0px 8px 4px 0px;
             position: fixed;
-            right: 256px;
+            right: 232px;
             bottom: 8px;
         }
 
@@ -139,7 +139,7 @@
             padding: 2px 0px 0px 0px;
             margin: 0px 8px 4px 0px;
             position: fixed;
-            right: 174px;
+            right: 160px;
             bottom: 8px;
         }
 
@@ -148,7 +148,7 @@
             padding: 2px 0px 0px 0px;
             margin: 0px 8px 4px 0px;
             position: fixed;
-            right: 98px;
+            right: 88px;
             bottom: 8px;
         }
 
@@ -159,6 +159,15 @@
             position: fixed;
             right: 16px;
             bottom: 8px;
+        }
+
+        button.angle {
+            font-size: 16px;
+            padding: 2px 0px 0px 0px;
+            margin: 0px 8px 4px 0px;
+            position: fixed;
+            right: 16px;
+            bottom: 80px;
         }
 
         .navbar button:active {
@@ -181,32 +190,22 @@
 
         .btn {
             background-color: inherit;
-            /* Blue background */
             border: none;
-            /* Remove borders */
             color: white;
-            /* White text */
             padding: 12px 12px;
-            /* Some padding */
             font-size: 16px;
-            /* Set a font size */
             cursor: pointer;
-            /* Mouse pointer on hover */
             position: fixed;
             margin-top: 4px;
             margin-left: 354px;
         }
 
-        /* .btn:hover {
-                background-color: inherit;
-                font-size: 20px;
-            } */
     </style>
 </head>
 
 <body>
     <div class="topnav">
-        <button class="notext circle" id="btn-circle" onclick="{onCircle();}">circle</button>
+        <button class="notext circle" id="btn-circle" onclick="{onCircle();}">90</button>
 
         <button class="notext rect" id="btn-rect" onclick="{onRect();}">rect</button>
 
@@ -230,6 +229,7 @@
         <button class="btn-zoom zoom-reset" onclick="{zoomReset();}">RST</button>
         <button class="btn-zoom zoom-one" onclick="{zoomOne();}">1</button>
         <button class="btn-zoom page-size" onclick="{onResize();}">P</button>
+        <button class="btn-zoom angle" onclick="{onAngle();}">90</button>
     </div>
 
     <script>
@@ -534,6 +534,16 @@
                 bannerHeight = hInch ? hInch : 1;
 
                 init();
+            }
+        }
+
+        const onAngle = () => {
+            const activeObj = canvas.getActiveObject() ? canvas.getActiveObject() : 'null';
+            if (activeObj !== 'null') {
+                const newAngle = activeObj.angle == 360 ? 0 : activeObj.angle + 90;
+                activeObj.rotate(newAngle);
+
+                canvas.renderAll();
             }
         }
 
